@@ -1,0 +1,32 @@
+sample-id	body-site	year	month	day	subject	Antibiotic	Days_since_infection	Infection_status	light	all_group	Run
+#q2:types	categorical	numeric	numeric	numeric	categorical	categorical	numeric	categorical	categorical	categorical	categorical
+T275A1_	bacteria in colon/faeces	2024	4	15	subject_1	No	-14	Uninfected	Typicallight	Uninfected_Baseline_neg_14_No	Run1
+T275A2_	bacteria in colon/faeces	2024	4	15	subject_2	No	-14	Uninfected	Typicallight	Uninfected_Baseline_neg_14_No	Run1
+T275A3_	bacteria in colon/faeces	2024	4	15	subject_3	No	-14	Uninfected	Typicallight	Uninfected_Baseline_neg_14_No	Run1
+T275A4_	bacteria in colon/faeces	2024	4	15	subject_4	No	-14	Uninfected	Typicallight	Uninfected_Baseline_neg_14_No	Run1
+T275A5_	bacteria in colon/faeces	2024	4	15	subject_5	No	-14	Uninfected	Typicallight	Uninfected_Baseline_neg_14_No	Run1
+T275B1_	bacteria in colon/faeces	2024	4	29	subject_6	No	0	Uninfected	Constantlight	Uninfected_Constantlight_0_No	Run1
+T275B2_	bacteria in colon/faeces	2024	4	29	subject_7	No	0	Uninfected	Constantlight	Uninfected_Constantlight_0_No	Run1
+T275B3_	bacteria in colon/faeces	2024	4	29	subject_8	No	0	Uninfected	Constantlight	Uninfected_Constantlight_0_No	Run1
+T275B4_	bacteria in colon/faeces	2024	4	29	subject_9	No	0	Uninfected	Constantlight	Uninfected_Constantlight_0_No	Run1
+T275B5_	bacteria in colon/faeces	2024	4	29	subject_10	No	0	Uninfected	Constantlight	Uninfected_Constantlight_0_No	Run1
+T275C1_	bacteria in colon/faeces	2024	5	3	subject_11	Yes	4	Uninfected	Constantlight	Uninfected_Constantlight_4_Yes	Run1
+T275C2_	bacteria in colon/faeces	2024	5	3	subject_12	Yes	4	Uninfected	Constantlight	Uninfected_Constantlight_4_Yes	Run1
+T275C3_	bacteria in colon/faeces	2024	5	1	subject_13	Yes	2	Uninfected	Constantlight	Uninfected_Constantlight_2_Yes	Run1
+T275C4_	bacteria in colon/faeces	2024	5	3	subject_14	Yes	4	Uninfected	Constantlight	Uninfected_Constantlight_4_Yes	Run1
+T275C5_	bacteria in colon/faeces	2024	5	1	subject_15	Yes	2	Uninfected	Constantlight	Uninfected_Constantlight_2_Yes	Run1
+T275D1_	bacteria in colon/faeces	2024	5	3	subject_16	Yes	4	Infected	Constantlight	Infected_Constantlight_4_Yes	Run1
+T275D2_	bacteria in colon/faeces	2024	5	3	subject_17	Yes	4	Infected	Constantlight	Infected_Constantlight_4_Yes	Run1
+T275D3_	bacteria in colon/faeces	2024	5	1	subject_18	Yes	2	Infected	Constantlight	Infected_Constantlight_2_Yes	Run1
+T275D4_	bacteria in colon/faeces	2024	5	3	subject_19	Yes	4	Infected	Constantlight	Infected_Constantlight_4_Yes	Run1
+T275D5_	bacteria in colon/faeces	2024	5	1	subject_20	Yes	2	Infected	Constantlight	Infected_Constantlight_2_Yes	Run1
+T275E1_	bacteria in colon/faeces	2024	4	30	subject_21	Yes	1.5	Infected	Typicallight	Infected_Typicallight_1.5_Yes	Run1
+T275E2_	bacteria in colon/faeces	2024	4	30	subject_22	Yes	1.5	Infected	Typicallight	Infected_Typicallight_1.5_Yes	Run1
+T275E3_	bacteria in colon/faeces	2024	4	30	subject_23	Yes	1.5	Infected	Typicallight	Infected_Typicallight_1.5_Yes	Run1
+T275E4_	bacteria in colon/faeces	2024	4	30	subject_24	Yes	1.5	Infected	Typicallight	Infected_Typicallight_1.5_Yes	Run1
+T275E5_	bacteria in colon/faeces	2024	4	30	subject_25	Yes	1.5	Infected	Typicallight	Infected_Typicallight_1.5_Yes	Run1
+T275F1_	bacteria in colon/faeces	2024	4	30	subject_26	Yes	1.5	Uninfected	Typicallight	Uninfected_Typicallight_1.5_Yes	Run1
+T275F2_	bacteria in colon/faeces	2024	4	30	subject_27	Yes	1.5	Uninfected	Typicallight	Uninfected_Typicallight_1.5_Yes	Run1
+T275F3_	bacteria in colon/faeces	2024	4	30	subject_28	Yes	1.5	Uninfected	Typicallight	Uninfected_Typicallight_1.5_Yes	Run1
+T275F4_	bacteria in colon/faeces	2024	4	30	subject_29	Yes	1.5	Uninfected	Typicallight	Uninfected_Typicallight_1.5_Yes	Run1
+T275F5_	bacteria in colon/faeces	2024	4	30	subject_30	Yes	1.5	Uninfected	Typicallight	Uninfected_Typicallight_1.5_Yes	Run1

@@ -1,0 +1,32 @@
+sample-id	barcode-sequence	body-site	year	month	day	subject	reported-antibiotic-usage	days-since-experiment-start (where start means infection day)	Infected or uninfected	Constant light or typical light cycle
+#q2:types	categorical	categorical	numeric	numeric	numeric	categorical	categorical	numeric	categorical	categorical
+T275A1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	15	subject-1	No	-14	Uninfected	Typical light
+T275A2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	15	subject-2	No	-14	Uninfected	Typical light
+T275A3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	15	subject-3	No	-14	Uninfected	Typical light
+T275A4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	15	subject-4	No	-14	Uninfected	Typical light
+T275A5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	15	subject-5	No	-14	Uninfected	Typical light
+T275B1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	29	subject-6	No	0	Uninfected	Constant light
+T275B2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	29	subject-7	No	0	Uninfected	Constant light
+T275B3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	29	subject-8	No	0	Uninfected	Constant light
+T275B4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	29	subject-9	No	0	Uninfected	Constant light
+T275B5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	29	subject-10	No	0	Uninfected	Constant light
+T275C1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-11	Yes	4	Uninfected	Constant light
+T275C2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-12	Yes	4	Uninfected	Constant light
+T275C3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	1	subject-13	Yes	2	Uninfected	Constant light
+T275C4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-14	Yes	4	Uninfected	Constant light
+T275C5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	1	subject-15	Yes	2	Uninfected	Constant light
+T275D1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-16	Yes	4	Infected	Constant light
+T275D2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-17	Yes	4	Infected	Constant light
+T275D3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	1	subject-18	Yes	2	Infected	Constant light
+T275D4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	3	subject-19	Yes	4	Infected	Constant light
+T275D5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	5	1	subject-20	Yes	2	Infected	Constant light
+T275E1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-21	Yes	1.5	Infected	Typical light
+T275E2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-22	Yes	1.5	Infected	Typical light
+T275E3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-23	Yes	1.5	Infected	Typical light
+T275E4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-24	Yes	1.5	Infected	Typical light
+T275E5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-25	Yes	1.5	Infected	Typical light
+T275F1_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-26	Yes	1.5	Uninfected	Typical light
+T275F2_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-27	Yes	1.5	Uninfected	Typical light
+T275F3_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-28	Yes	1.5	Uninfected	Typical light
+T275F4_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-29	Yes	1.5	Uninfected	Typical light
+T275F5_	CCTACGGGNGGCWGCAG	bacteria in colon/faeces	2024	4	30	subject-30	Yes	1.5	Uninfected	Typical light

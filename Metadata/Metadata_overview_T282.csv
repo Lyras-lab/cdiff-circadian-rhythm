@@ -1,0 +1,53 @@
+﻿sample-id,barcode-sequence,body-site,year,month,day,subject,reported-antibiotic-usage,days-since-experiment-start (where day 0 start means infection day),Infected or uninfected,Constant light or typical light cycle
+#q2:types,categorical,categorical,numeric,numeric,numeric,categorical,categorical,numeric,categorical,categorical
+T282 B1 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-1,No,-14,Uninfected,Baseline before constant light
+T282 B2 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-2,No,-14,Uninfected,Baseline before constant light
+T282 B3 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-3,No,-14,Uninfected,Baseline before constant light
+T282 B4 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-4,No,-14,Uninfected,Baseline before constant light
+T282 B5 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-5,No,-14,Uninfected,Baseline before constant light
+T282 E1 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-6,No,-14,Uninfected,Baseline before constant light 
+T282 E3 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-7,No,-14,Uninfected,Baseline before constant light 
+T282 E4 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-8,No,-14,Uninfected,Baseline before constant light 
+T282 E5 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-9,No,-14,Uninfected,Baseline before constant light 
+T282 G1 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-10,No,-14,Uninfected,Baseline before typical light
+T282 G2 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-11,No,-14,Uninfected,Baseline before typical light
+T282 G3 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-12,No,-14,Uninfected,Baseline before typical light
+T282 G4 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-13,No,-14,Uninfected,Baseline before typical light
+T282 G5 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-14,No,-14,Uninfected,Baseline before typical light
+T282 F1 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-15,No,-14,Uninfected,Baseline before typical light
+T282 F2 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-16,No,-14,Uninfected,Baseline before typical light
+T282 F3 BL,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,8,19,subject-17,No,-14,Uninfected,Baseline before typical light
+T282 B1 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-1,Yes,0,Uninfected,Constant light
+T282 B2 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-2,Yes,0,Uninfected,Constant light
+T282 B3 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-3,Yes,0,Uninfected,Constant light
+T282 B4 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-4,Yes,0,Uninfected,Constant light
+T282 B5 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-5,Yes,0,Uninfected,Constant light
+T282 E1 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-6,Yes,0,Uninfected,Constant light 
+T282 E3 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-7,Yes,0,Uninfected,Constant light 
+T282 E4 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-8,Yes,0,Uninfected,Constant light 
+T282 E5 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-9,Yes,0,Uninfected,Constant light 
+T282 G1 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-10,Yes,0,Uninfected,Typical light
+T282 G2 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-11,Yes,0,Uninfected,Typical light
+T282 G3 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-12,Yes,0,Uninfected,Typical light
+T282 G4 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-13,Yes,0,Uninfected,Typical light
+T282 G5 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-14,Yes,0,Uninfected,Typical light
+T282 F1 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-15,Yes,0,Uninfected,Typical light
+T282 F2 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-16,Yes,0,Uninfected,Typical light
+T282 F3 d0,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,2,subject-17,Yes,0,Uninfected,Typical light
+T282 B1 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-1,Yes,1.5,Uninfected,Constant light
+T282 B2 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-2,Yes,1.5,Uninfected,Constant light
+T282 B3 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-3,Yes,1.5,Uninfected,Constant light
+T282 B4 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-4,Yes,1.5,Uninfected,Constant light
+T282 B5 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-5,Yes,1.5,Uninfected,Constant light
+T282 E1 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-6,Yes,1.5,Infected,Constant light 
+T282 E3 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-7,Yes,1.5,Infected,Constant light 
+T282 E4 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-8,Yes,1.5,Infected,Constant light 
+T282 E5 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-9,Yes,1.5,Infected,Constant light 
+T282 G1 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-10,Yes,1.5,Uninfected,Typical light
+T282 G2 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-11,Yes,1.5,Uninfected,Typical light
+T282 G3 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-12,Yes,1.5,Uninfected,Typical light
+T282 G4 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-13,Yes,1.5,Uninfected,Typical light
+T282 G5 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-14,Yes,1.5,Uninfected,Typical light
+T282 F1 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-15,Yes,1.5,Infected,Typical light
+T282 F2 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-16,Yes,1.5,Infected,Typical light
+T282 F3 36h,CCTACGGGNGGCWGCAG,bacteria in colon/faeces,2024,9,3,subject-17,Yes,1.5,Infected,Typical light
