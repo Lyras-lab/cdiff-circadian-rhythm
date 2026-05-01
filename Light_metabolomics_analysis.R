@@ -7,6 +7,7 @@ library(stringr)
 library(ComplexHeatmap)
 library(uwot)
 library(limpa)
+library(fgsea)
 
 # Set ggplot2 themes for the paper
 blank_theme <- theme_bw(base_size = 7)+
@@ -18,17 +19,17 @@ blank_theme <- theme_bw(base_size = 7)+
 # https://support.bioconductor.org/p/64484/
 
 condition_colors <- c(
-  "Uni_Typical_light" = "#56B4E9",   # Light Blue
-  "Uni_Const_light" = "#0072B2",   # Dark Blue
-  "Inf_Typical_light" = "#D55E00",   # Reddish Orange
-  "Inf_Const_light" = "#E69F00"   # Orange
+  "Uni_Typical_light" = "#008000",   
+  "Uni_Const_light" = "#C000C0",   
+  "Inf_Typical_light" = "#0396FE",   
+  "Inf_Const_light" = "#FFA040"   
 )
 
 outdir <- "./output_metabolomics/"
-system(paste0("mkdir -p ",outdir, "/plots"))
+system(paste0("mkdir -p ",outdir, "/plots/barcode_plots/"))
 
 # Read in the protein data
-protein <- read_csv("./metabolomics_inputs/P21_0421_Exp5_StatsTable.csv")
+protein <- read_csv("./Metabolomics_inputs/P21_0421_Exp5_StatsTable.csv")
 
 duplicated_row <- protein[,grepl("Allysine", colnames(protein))]
 
@@ -61,32 +62,23 @@ colnames(protein_mat) == md$Sample
 
 # Log transfrom the counts
 log2_spectra <- log2(protein_mat)
+log2_spectra[log2_spectra == -Inf] <- NA
 
 protein.id <- rownames(log2_spectra)
 
-dpcest <- dpc(log2_spectra)
+dpcest <- dpcCN(log2_spectra)
 y.protein <- dpcQuant(log2_spectra, protein.id, dpc=dpcest)
-fit <- dpcDE(y.protein, design)
-fit <- eBayes(fit)
-topTable(fit)
+
+plotMDSUsingSEs(y.protein)
 
 # Set up a design matrix
 design <- model.matrix(~0+ Infection_light, data = md)
 colnames(design) <- gsub("Infection_light", "", colnames(design))
 rownames(design) <- colnames(protein_mat)
 
-#keep <- rowMeans(log2_spectra) >17.5
+hist(y.protein$E, breaks = 300)
 
-#table(keep)
-
-#log2_spectra <- log2_spectra[keep,]
-
-hist(log2_spectra, breaks = 300)
-
-# Decided normalisation was not requred
-normalized <- normalizeBetweenArrays(log2_spectra, method="none")
-
-um <- umap(t(normalized))
+um <- umap(t(y.protein$E))
 
 # Colours for umap
 umdf <- um%>%
@@ -96,7 +88,7 @@ umdf <- um%>%
 
 um_plot <- ggplot(data = umdf, aes(x = X1, y = X2, colour = Infection_light)) + 
   geom_point(size = 2) +
-  stat_ellipse(aes(fill = Infection_light), geom = "polygon", alpha = 0.2, colour = NA) +
+  stat_ellipse(aes(colour = Infection_light), geom = "polygon", alpha = 0.2, fill = NA) +
   labs(x = "UMAP 1", y = "UMAP 2") + 
   blank_theme +
   theme(
@@ -104,8 +96,7 @@ um_plot <- ggplot(data = umdf, aes(x = X1, y = X2, colour = Infection_light)) +
     aspect.ratio = 1
   ) +
   scale_colour_manual(values = condition_colors) +
-  scale_fill_manual(values = condition_colors) +
-  labs(colour = "Infection/light", fill = "Infection/light", title = "All metabolites")
+  labs(colour = "Infection/light", title = "All metabolites")
 
 ggsave(plot = um_plot,paste0(outdir, "/plots/Annotated UMAP.pdf"), 
        width = 100, height = 85, units = "mm")
@@ -119,17 +110,8 @@ abline(h=median(log2_spectra),col="blue")
 title("Boxplots of log intensities (unnormalised)")
 dev.off()
 
-pdf(paste0(outdir, "/plots/Normalised_spectra.pdf"), width = 7, height = 5)
-par(mar = c(7, 4.1, 4.1, 2.1))
-# Check distributions of samples using boxplots
-boxplot(normalized, xlab="", ylab="Log2 counts",las=2)
-# Let's add a blue horizontal line that corresponds to the median logCPM
-abline(h=median(normalized),col="blue")
-title("Boxplots of log intensities (normalised)")
-dev.off()
-
 # Fit the model
-fit <- lmFit(normalized, design = design)
+fit <- dpcDE(y.protein, design)
 
 colnames(design)
 
@@ -144,7 +126,7 @@ contrast.matrix <- makeContrasts(
 fit2 <- contrasts.fit(fit, contrast.matrix)
 
 # Use limma-trend to allow an "intensity-dependent trend for the prior variance"
-fit3 <- eBayes(fit2, trend = TRUE, robust = TRUE)
+fit3 <- eBayes(fit2)
 
 # Plot residual standard deviation versus average log 
 # expression for a fitted microarray linear model.
@@ -178,7 +160,7 @@ ggplot(data = plot_summary, aes(y = Contrast, x = `Number of genes`, fill = `Dir
 system(paste0("mkdir -p ", outdir, "/glimma/mds/"))
 mds_save <-paste0(outdir,"/glimma/mds/", "MDS.html")
 
-htmlwidgets::saveWidget(glimmaMDS(normalized, groups = md$Infection_light,
+htmlwidgets::saveWidget(glimmaMDS(y.protein$E, groups = md$Infection_light,
                                   labels = md), mds_save)
 
 system(paste0("mkdir -p ", outdir, "/toptables"))
@@ -194,14 +176,14 @@ for(contrast in colnames(contrast.matrix)){
   vol_save <- paste0(outdir,"/glimma/volcano/",contrast, "_Volcano.html")
   
   htmlwidgets::saveWidget(glimmaVolcano(fit3, coef = contrast,main = gsub("_"," ",contrast),
-                                        counts = normalized,transform.counts	= "none",
+                                        counts = y.protein$E,transform.counts	= "none",
                                         dge = fit3, groups = md$Infection_light,
                                         xlab = "log2_normalised_intensity_FC"), vol_save)
   
   ma_save <- paste0(outdir,"/glimma/MA/",contrast, "_MA.html")
   
   htmlwidgets::saveWidget(glimmaMA(fit3, coef = contrast,main = gsub("_"," ",contrast),
-                                   counts = normalized,transform.counts	= "none",
+                                   counts = y.protein$E,transform.counts	= "none",
                                    dge = fit3, groups = md$Infection_light,
                                    xlab = "log2_normalised_intensity"), ma_save)
   
@@ -240,7 +222,7 @@ duplicated_names[duplicated(duplicated_names)]
 
 unique_names <- unique(duplicated_names)
 
-sum(duplicated_names == rownames(normalized))
+sum(duplicated_names == rownames(y.protein$E))
 
 length(unique_names)
 
@@ -386,7 +368,7 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 # 
 # saveRDS(metabolite_list, paste0(outdir,"/ref/metabolites_for_GSEA.rds"))
 
-# metabolite_list <- readRDS("./metabolomics_inputs/metabolites_for_GSEA.rds")
+metabolite_list <- readRDS("./Metabolomics_inputs/metabolites_for_GSEA.rds")
 # 
 # metabolo_list_df <- do.call(rbind, lapply(names(metabolite_list), function(n) {
 #   data.frame(Metabolite_set = n, Metabolite = metabolite_list[[n]], stringsAsFactors = FALSE)
@@ -394,7 +376,7 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 # 
 # write_csv(metabolo_list_df, paste0(outdir,"/ref/metabolites_for_GSEA_data_frame.csv"))
 
-metabolo_list_df <- read_csv("./metabolomics_inputs/metabolites_for_GSEA_data_frame.csv")
+metabolo_list_df <- read_csv("./Metabolomics_inputs/metabolites_for_GSEA_data_frame.csv")
 
 # Use the duplicated names for identification
 indexed <- ids2indices(gene.sets = metabolite_list, identifiers = duplicated_names, remove.empty=TRUE)
@@ -404,14 +386,14 @@ system(paste0("mkdir -p ", outdir,"gsea/fry/"))
 
 for(contrast in colnames(contrast.matrix)){
   
-  camera_result <- camera(y = normalized ,index = indexed, design = design,trend.var=T,
+  camera_result <- camera(y = y.protein ,index = indexed, design = design,
                           contrast = contrast.matrix[,contrast])%>%
     rownames_to_column("Gene set")%>%
     filter(FDR < 0.1)%>%
     dplyr::select(`Gene set`,"NGenes" , "Direction", "PValue", "FDR")%>%
     mutate(Contrast= contrast)
   
-  fry_result <- fry(y = normalized ,index = indexed, design = design, trend.var=T,
+  fry_result <- fry(y = y.protein ,index = indexed, design = design,
                     contrast = contrast.matrix[,contrast])%>%
     rownames_to_column("Gene set")%>%
     filter(FDR < 0.05)%>%
@@ -473,8 +455,27 @@ fry_compiled <- bind_rows(clist)%>%
 fry_compiled_plot <- fry_compiled%>%
   filter(contrast == "Metabolites_Inf_Const_light_vs_Inf_Typical_light")
 
-camera_compiled_plot <- camera_compiled%>%
-  filter(contrast == "Metabolites_Inf_Const_light_vs_Inf_Typical_light")
+inf_light <- toptables_compiled%>%
+  filter(contrast == "Inf_Const_light_vs_Inf_Typical_light")
+
+DE <- inf_light%>%
+  arrange(t)
+
+ranks <- as.numeric(DE$t)
+names(ranks) <- DE$Gene
+
+head(ranks)
+
+# Run FGSEA with our data
+# Gene set list is made up from the eggonog data
+fgseaRes <- fgsea(pathways = metabolite_list, 
+                  stats    = ranks,
+                  minSize  = 2,
+                  maxSize  = 2000)
+
+# Keep just the signifcant pathways
+fgseaRes_ordered <- fgseaRes%>%
+  arrange(padj)
   
 fry_gene_sets <- ggplot(fry_compiled_plot, aes(x = -log10(FDR), y = `Gene set`, size = NGenes, color = Direction)) +
   geom_point(alpha = 0.8) +
@@ -527,7 +528,7 @@ gene_set_heatmap_metabolo <- function(index, desc, small = F){
     arrange(Infection_light)
   
   # Grab the genes from the CPM
-  genes <- normalized[index,md_orderd$Sample]%>%
+  genes <- y.protein$E[index,md_orderd$Sample]%>%
     t()%>%
     scale()%>%
     t()
@@ -557,7 +558,7 @@ gene_set_heatmap_metabolo_inf <- function(index, desc, small = F){
     mutate(Infection_light = droplevels(Infection_light))
   
   # Grab the genes from the CPM
-  genes <- normalized[index,md_orderd$Sample]%>%
+  genes <- y.protein$E[index,md_orderd$Sample]%>%
     t()%>%
     scale()%>%
     t()
@@ -584,7 +585,6 @@ system(paste0("mkdir -p ", outdir,"plots/heatmaps/"))
 system(paste0("mkdir -p ", outdir,"plots/heatmaps_inf/"))
 
 # Make for loop to run the heatmap function for all signifcant gene sets
-
 for(gene_set in unique(fry_compiled$`Gene set`)){
   
   print(gene_set)
