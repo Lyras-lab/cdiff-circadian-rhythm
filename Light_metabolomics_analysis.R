@@ -8,6 +8,7 @@ library(ComplexHeatmap)
 library(uwot)
 library(limpa)
 library(fgsea)
+library(ggrepel)
 
 # Set ggplot2 themes for the paper
 blank_theme <- theme_bw(base_size = 7)+
@@ -40,9 +41,6 @@ protein_mat <- t(protein_mat)
 
 min(protein_mat)
 
-protein_mat_na <- protein_mat
-protein_mat_na[protein_mat_na == 0] <- NA
-
 md <- data.frame(Sample = colnames(protein_mat))%>%
   # Drop a sample where diff was not properly detected
   filter(Sample != "Typical_light_Cdifficile_5")%>%
@@ -64,17 +62,38 @@ colnames(protein_mat) == md$Sample
 log2_spectra <- log2(protein_mat)
 log2_spectra[log2_spectra == -Inf] <- NA
 
-protein.id <- rownames(log2_spectra)
+# 2. Extract the clean biological names
+clean_names <- gsub("\\.\\.\\..*", "", rownames(log2_spectra))
 
-dpcest <- dpcCN(log2_spectra)
-y.protein <- dpcQuant(log2_spectra, protein.id, dpc=dpcest)
+# 3. Create a data frame to help us find the "Best" feature
+feature_stats <- data.frame(
+  Original_Name = rownames(log2_spectra),
+  Clean_Name = clean_names,
+  # Calculate mean intensity (ignoring NAs) to find the strongest peak
+  Mean_Intensity = rowMeans(log2_spectra, na.rm = TRUE)
+)
+
+# 4. Filter to keep only the highest-intensity peak for each metabolite
+best_features <- feature_stats %>%
+  group_by(Clean_Name) %>%
+  slice_max(order_by = Mean_Intensity, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+# 5. Subset your raw matrix to ONLY these best features
+log2_spectra_unique <- log2_spectra[best_features$Original_Name, ]
+rownames(log2_spectra_unique) <- best_features$Clean_Name
+
+protein.id <- rownames(log2_spectra_unique)
+
+dpcest <- dpcCN(log2_spectra_unique)
+y.protein <- dpcQuant(log2_spectra_unique, protein.id, dpc=dpcest)
 
 plotMDSUsingSEs(y.protein)
 
 # Set up a design matrix
 design <- model.matrix(~0+ Infection_light, data = md)
 colnames(design) <- gsub("Infection_light", "", colnames(design))
-rownames(design) <- colnames(protein_mat)
+rownames(design) <- colnames(log2_spectra_unique)
 
 hist(y.protein$E, breaks = 300)
 
@@ -214,6 +233,71 @@ toptables_signif <- toptables_compiled %>%
   filter(adj.P.Val <= 0.05)%>%
   arrange(adj.P.Val)%>%
   write_csv(paste0(outdir, "Compiled_toptables_significant_genes.csv"))
+
+conts <- c("Uni_Const_light_vs_Uni_Typical_light","Inf_Const_light_vs_Inf_Typical_light")
+
+for (cont in conts){
+  
+  toptable_plot <- toptables_compiled%>%
+    filter(contrast == cont)
+  
+  # 1. Map the significance labels and clean the family names
+  plot_data <- toptable_plot %>%
+    mutate(Significance = case_when(
+      adj.P.Val < 0.05 & logFC > 0 ~ "Increase",
+      adj.P.Val < 0.05 & logFC < 0 ~ "Decrease",
+      TRUE ~ "Not differentially abundant"
+    )) %>%
+    # Lock in the factor order so the legend displays logically
+    mutate(Significance = factor(Significance, levels = c("Decrease", "Not differentially abundant", "Increase"))) 
+  
+  # 2. Set colors to match your requested line colors
+  volcano_colors <- c(
+    "Increase" = "red", 
+    "Decrease" = "blue", 
+    "Not differentially abundant" = "grey80"
+  )
+  
+  # Extract the top 10 most significant metabolites for labeling
+  top10_data <- plot_data %>%
+    filter(Significance != "Not differentially abundant") %>%
+    arrange(adj.P.Val) %>%
+    head(10)
+  
+  # 3. Generate the plot
+  custom_volcano <- ggplot(plot_data, aes(x = logFC, y = -log10(adj.P.Val))) +
+    
+    # Use shape = 21 for filled circles with borders. 
+    # color = "black" sets the border, fill is mapped to your groups.
+    geom_point(aes(fill = Significance), alpha = 0.7, size = 2, shape = 21, color = "black", stroke = 0.3) +
+    
+    # Update the legend title here
+    scale_fill_manual(name = "Differential abundance", values = volcano_colors) +
+    
+    # Add the ggrepel layer to label only the top 10 significant families
+    geom_text_repel(
+      data = top10_data,
+      aes(label = Gene),
+      size = 3.5,
+      max.overlaps = Inf,
+      show.legend = FALSE 
+    ) +
+    
+    # Update labels using expression() for subscripts and negative sign
+    labs(
+      x = expression(Log[2]*"FC constant light relative to 12-hour light/12-hour dark"),
+      y = expression(-Log[10](P[adj]))
+    ) +
+    
+    theme_bw(base_size = 14) 
+  
+  print(custom_volcano)
+  
+  # Save the plot 
+  ggsave(filename = paste0(outdir, "plots/",cont, "_custom_Volcano.pdf"),
+         plot = custom_volcano, width = 8, height = 6)
+  
+}
 
 all_metabolites <- rownames(protein_mat)
 
@@ -378,8 +462,11 @@ metabolite_list <- readRDS("./Metabolomics_inputs/metabolites_for_GSEA.rds")
 
 metabolo_list_df <- read_csv("./Metabolomics_inputs/metabolites_for_GSEA_data_frame.csv")
 
+rownames(y.protein$E)
+
 # Use the duplicated names for identification
-indexed <- ids2indices(gene.sets = metabolite_list, identifiers = duplicated_names, remove.empty=TRUE)
+indexed <- ids2indices(gene.sets = metabolite_list, identifiers = rownames(y.protein$E), remove.empty=TRUE)
+
 # Make a directory
 system(paste0("mkdir -p ", outdir,"gsea/camera/"))
 system(paste0("mkdir -p ", outdir,"gsea/fry/"))
@@ -528,9 +615,9 @@ gene_set_heatmap_metabolo <- function(index, desc, small = F){
     arrange(Infection_light)
   
   # Grab the genes from the CPM
-  genes <- y.protein$E[index,md_orderd$Sample]%>%
-    t()%>%
-    scale()%>%
+  genes <- y.protein$E[index, md_orderd$Sample, drop = FALSE] %>%
+    t() %>%
+    scale() %>%
     t()
   
   ha = HeatmapAnnotation(Condition = md_orderd$Infection_light,
@@ -558,9 +645,9 @@ gene_set_heatmap_metabolo_inf <- function(index, desc, small = F){
     mutate(Infection_light = droplevels(Infection_light))
   
   # Grab the genes from the CPM
-  genes <- y.protein$E[index,md_orderd$Sample]%>%
-    t()%>%
-    scale()%>%
+  genes <- y.protein$E[index, md_orderd$Sample, drop = FALSE] %>%
+    t() %>%
+    scale() %>%
     t()
   
   ha = HeatmapAnnotation(Condition = md_orderd$Infection_light,
