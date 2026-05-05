@@ -13,8 +13,16 @@ library(pairwiseAdonis)
 library(rstatix)
 
 # Place to save output results
+system("mkdir -p ./sessioninfo")
 outdir <- "./output_abundance/"
-system(paste0("mkdir -p ", outdir))
+system(paste0("mkdir -p ", outdir, "toptables"))
+system(paste0("mkdir -p ", outdir, "toptreat"))
+system(paste0("mkdir -p ", outdir, "glimma/volcano/"))
+system(paste0("mkdir -p ", outdir, "glimma/MA/"))
+system(paste0("mkdir -p ", outdir, "tables/"))
+system(paste0("mkdir -p ", outdir, "plots/"))
+system(paste0("mkdir -p ", outdir, "glimma/mds/"))
+
 
 # Note that I started with run 2 (T282) so run 2 is note named and run 1 (T275) is named run -1
 
@@ -166,9 +174,7 @@ write_csv(lcpm_df, paste0(outdir, "TMM_normalised_log2_CPMs.csv"))
 # bulk_anno_test <- bulk_anno
 # bulk_anno_test$f936920a3a442ae373b5d3832c0f5a35 <- mat["f936920a3a442ae373b5d3832c0f5a35",]
 # bulk_anno_test$lcpm_f936920a3a442ae373b5d3832c0f5a35 <- lcpm["f936920a3a442ae373b5d3832c0f5a35",]
-
-system(paste0("mkdir -p ", outdir, "/glimma/mds/"))
-mds_save <-paste0(outdir,"/glimma/mds/", "MDS.html")
+mds_save <-paste0(outdir,"glimma/mds/", "MDS.html")
 
 htmlwidgets::saveWidget(glimmaMDS(counts, groups = bulk_anno$all_group,
                                   labels = bulk_anno), mds_save)
@@ -208,11 +214,6 @@ summary(summa.fit)
 # Make a TREAT fit object
 tfit <- treat(fit, fc=1.5)
 
-system(paste0("mkdir -p ", outdir, "/toptables"))
-system(paste0("mkdir -p ", outdir, "/toptreat"))
-system(paste0("mkdir -p ", outdir, "/glimma/volcano/"))
-system(paste0("mkdir -p ", outdir, "/glimma/MA/"))
-
 for(contrast in colnames(cont.matrix)){
   
   toptable <- topTable(fit,coef=contrast,sort.by="p",number = Inf)%>%
@@ -223,13 +224,13 @@ for(contrast in colnames(cont.matrix)){
     rownames_to_column("Gene")%>%
     write_csv(paste0(outdir,"toptreat/", contrast, "_toptreat.csv"))
   
-  vol_save <- paste0(outdir,"/glimma/volcano/",contrast, "_Volcano.html")
+  vol_save <- paste0(outdir,"glimma/volcano/",contrast, "_Volcano.html")
   
   htmlwidgets::saveWidget(glimmaVolcano(fit, coef = contrast,main = gsub("_"," ",contrast),
                                         counts = lcpm,transform.counts	= "none",
                                         dge = counts, groups = bulk_anno$all_group), vol_save)
   
-  ma_save <- paste0(outdir,"/glimma/MA/",contrast, "_MA.html")
+  ma_save <- paste0(outdir,"glimma/MA/",contrast, "_MA.html")
   
   htmlwidgets::saveWidget(glimmaMA(fit, coef = contrast,main = gsub("_"," ",contrast),
                                    counts = lcpm,
@@ -301,8 +302,6 @@ palette_paired[11] <- "pink"
 # Create a named vector mapping group names to colors
 cb_palette_final <- setNames(palette_paired, unique(bulk_anno$all_group))
 
-system(paste0("mkdir -p ", outdir, "/plots/"))
-
 newpal <- c("Uni_Typic_0_Anti" = "#A2DF8D",
             "Uni_Const_0_Anti" = "#D9BBF7", 
             "Uni_Typic_1.5_Anti" = "#008000",
@@ -365,16 +364,12 @@ for(run in unique(bulk_anno$Run)){
     pairwise_permanova_raw <- pairwise.adonis(bray_curtis_raw,
                                               factors = sample_df_raw$all_group,
                                               p.adjust.m = "BH") # Benjamini-Hochberg correction
-    
-    # write_csv(pairwise_permanova_raw, "./output/tables/permanova_pairwise_bray_raw_counts.csv") # Save results
   } else {
     print("Global PERMANOVA not significant, skipping pairwise tests.")
     pairwise_permanova_raw <- NULL
   }
   
-  system("mkdir -p ./output/tables/")
-  
-  write_csv(pairwise_permanova_raw, paste0("./output/tables/",run, "-bray-pairwise_permanova-antis.csv"))
+  write_csv(pairwise_permanova_raw, paste0(outdir, "tables/",run, "-bray-pairwise_permanova-antis.csv"))
   
   
   # Run PCoA using the raw counts phyloseq object and raw counts distance matrix
@@ -382,7 +377,7 @@ for(run in unique(bulk_anno$Run)){
   
   # Make the plot
   pcoa_plot_raw <- plot_ordination(physeq_raw, pcoa_bray_raw, color = "all_group") +
-    labs(title=paste0("PCoA on Bray-Curtis (Raw Counts, ", run, ")"), colour = "All conditions") +
+    labs(title=paste0("PCoA on Bray-Curtis (raw counts, ", run, ")"), colour = "All conditions") +
     geom_point(size = 2.5, alpha = 0.7) + # Adjust point appearance
     stat_ellipse(aes(group = all_group, color = all_group), # Use group aesthetic here too
                  type = "t", level = 0.95, linewidth=0.7) + # Ellipses for groups
@@ -404,7 +399,7 @@ for(run in unique(bulk_anno$Run)){
              hjust = 1.05, vjust = -0.5, # Adjust position
              size = 3.5, col = "black")
   
-  ggsave(filename = paste0("./output/plots/",run, "_bray_pcoa-antis.pdf"), 
+  ggsave(filename = paste0(outdir, "plots/",run, "_bray_pcoa-antis.pdf"), 
          plot = pcoa_plot_annotated,width = 7, height = 5.5)
   
   # Convert distance object to matrix
@@ -482,10 +477,10 @@ for(run in unique(bulk_anno$Run)){
     geom_boxplot(outlier.shape = NA, aes(fill = !!sym(alpha_group_var))) +
     geom_jitter(width = 0.25, height = 0, size = 1.5, alpha = 0.7) +
     scale_fill_manual(values = cb_palette_final) +
-    labs(title = "Average Bray-Curtis Distance to Baseline Group",
+    labs(title = "Average Bray-Curtis distance to baseline group",
          subtitle = get_test_label(stat_test_dist, detailed = TRUE),
          x = "Group",
-         y = "Avg. Bray-Curtis Dist. to Baseline") +
+         y = "Avg. Bray-Curtis dist. to baseline") +
     theme_bw(base_size = 12) +
     theme(axis.text.x = element_text(angle = 60, hjust = 1, size=10),
           axis.title.x = element_blank(),
@@ -511,12 +506,12 @@ for(run in unique(bulk_anno$Run)){
   # Print the plot
   print(dist_boxplot)
   
-  ggsave(filename = paste0("./output/plots/",run, "_bray_boxplot-antis.pdf"), 
+  ggsave(filename = paste0(outdir, "plots/",run, "_bray_boxplot-antis.pdf"), 
          plot = dist_boxplot,width = 7, height = 7)
   
   if(!is.null(dunn_test_dist)){
     write_csv(dunn_test_dist, 
-              paste0("./output/tables/", run, "_bray-dunn-test-dist-all-relative-to-baseline-antis", ".csv"))
+              paste0(outdir, "tables/", run, "_bray-dunn-test-dist-all-relative-to-baseline-antis.csv"))
   }
   
   # Make a Shannon index plot 
@@ -561,7 +556,7 @@ for(run in unique(bulk_anno$Run)){
     
     str(dunn_test_shannon$groups)
     
-    write_csv(dunn_test_shannon, paste0("./output/tables/", run, "_dunn-test-table-shannon_index-antis.csv"))
+    write_csv(dunn_test_shannon, paste0(outdir, "tables/", run, "_dunn-test-table-shannon_index-antis.csv"))
   }
   
   # Rebuild the plot object (start fresh to avoid layering issues during debugging)
@@ -569,9 +564,9 @@ for(run in unique(bulk_anno$Run)){
     geom_boxplot(outlier.shape = NA, aes(fill = !!sym(alpha_group_var))) +
     geom_jitter(width = 0.25, height = 0, size = 1.5, alpha = 0.7) +
     scale_fill_manual(values = cb_palette_final) +
-    labs(title = "Shannon Diversity Comparison",
+    labs(title = "Shannon diversity comparison",
          x = "Group",
-         y = "Shannon Index (ln)") +
+         y = "Shannon index (ln)") +
     theme_bw(base_size = 12) +
     theme(axis.text.x = element_text(angle = 60, hjust = 1, size=10),
           axis.title.x = element_blank(),
@@ -597,7 +592,7 @@ for(run in unique(bulk_anno$Run)){
     }
   }
   
-  ggsave(filename = paste0("./output/plots/", run, "_shannon_plot-antis.pdf"), 
+  ggsave(filename = paste0(outdir, "plots/", run, "_shannon_plot-antis.pdf"), 
          plot = shannon_plot,
          width = 7, height = 7)
   
@@ -679,7 +674,7 @@ all_results_df <- do.call(rbind, results_list)%>%
 all_results_df$p.adjusted <- p.adjust(all_results_df$p.value, method = "BH")
 
 # Save the results
-write_csv(all_results_df, paste0("./output/tables/", "Groups_of_interest_permanova.csv"),)
+write_csv(all_results_df, paste0(outdir, "tables/", "Groups_of_interest_permanova.csv"))
 
 # Shannon Index: Pairwise Wilcoxon for Specific Contrasts ---
 
@@ -717,7 +712,7 @@ pairwise_shannon_select$p.adj <- p.adjust(pairwise_shannon_select$p, method = "B
 pairwise_shannon_plotting <- pairwise_shannon_select %>%
   rstatix::add_xy_position(x = "all_group", data = bulk_run_shannon) # Use original data for positioning
 
-write_csv(pairwise_shannon_plotting, paste0("./output/tables/", "Groups_of_interest_wilcox_shannon.csv"),)
+write_csv(pairwise_shannon_plotting, paste0(outdir, "tables/", "Groups_of_interest_wilcox_shannon.csv"))
 
 # Shannon Index Boxplot with Specific Annotations ---
 shannon_boxplot_select <- ggplot(bulk_run_shannon, aes(x = all_group, y = Shannon)) +
@@ -733,10 +728,10 @@ shannon_boxplot_select <- ggplot(bulk_run_shannon, aes(x = all_group, y = Shanno
     hide.ns = T           # Hide non-significant comparisons if desired
   ) +
   labs(
-    title = "Shannon Diversity (Run 2 Specific Groups)",
+    title = "Shannon diversity (run 2 specific groups)",
     subtitle = "Pairwise comparisons: Wilcoxon test, BH adjustment",
     x = "Group",
-    y = "Shannon Index (ln)"
+    y = "Shannon index (ln)"
   ) +
   theme_bw(base_size = 12) +
   theme(
@@ -814,7 +809,7 @@ if (stat_test_dist_subset$p < 0.05) {
   dunn_test_dist_plotting <- dunn_test_dist_plotting%>%
     mutate(p.adj.signif = replace(p.adj.signif, p.adj < 0.05, "*"))
   
-  write_csv(dunn_test_dist_plotting, paste0("./output/tables/", "Groups_of_interest_Dunn_test_Bray_dist.csv"),)
+  write_csv(dunn_test_dist_plotting, paste0(outdir, "tables/", "Groups_of_interest_Dunn_test_Bray_dist.csv"))
   
 } else {
   message("Overall Kruskal-Wallis test for Avg_Dist_To_Baseline not significant (p=", stat_test_dist_subset$p, "). Skipping Dunn's test and annotations.")
@@ -826,10 +821,10 @@ dist_boxplot_select <- ggplot(bulk_run_dist, aes(x = all_group, y = Avg_Dist_To_
   geom_jitter(width = 0.2, height = 0, size = 2, alpha = 0.7) +
   scale_fill_manual(values = analysis_palette) + # Use subsetted palette
   labs(
-    title = "Average Bray-Curtis Distance to Baseline (Uni_Typic_0_Anti)",
+    title = "Average Bray-Curtis distance to baseline (Uni_Typic_0_Anti)",
     subtitle = get_test_label(stat_test_dist_subset, detailed = TRUE), # Show Kruskal p-value
     x = "Group",
-    y = "Avg. Bray-Curtis Dist. to Baseline"
+    y = "Avg. Bray-Curtis dist. to baseline"
   ) +
   theme_bw(base_size = 12) +
   theme(
@@ -890,7 +885,7 @@ hm <- Heatmap(cpm_scaled, top_annotation = ha, name = "Row Z score",
               row_names_gp = gpar(fontsize = 10),
               row_names_max_width = unit(30, "cm"))
 
-pdf("./output/plots/DE_bacteria_heatmap.pdf", width = 40, height = 20) 
+pdf(paste0(outdir, "plots/DE_bacteria_heatmap.pdf"), width = 40, height = 20) 
 draw(hm) 
 dev.off()  
 
@@ -942,12 +937,13 @@ dev.off()
 
 # Try a family level analysis ----
 outdir <- "./output_family_level_abundance/"
-system(paste0("mkdir -p ", outdir, "/toptables"))
-system(paste0("mkdir -p ", outdir, "/toptreat"))
-system(paste0("mkdir -p ", outdir, "/glimma/volcano/"))
-system(paste0("mkdir -p ", outdir, "/glimma/MA/"))
-system(paste0("mkdir -p ", outdir, "/tables/"))
-system(paste0("mkdir -p ", outdir, "/plots/"))
+system(paste0("mkdir -p ", outdir, "toptables"))
+system(paste0("mkdir -p ", outdir, "toptreat"))
+system(paste0("mkdir -p ", outdir, "glimma/volcano/"))
+system(paste0("mkdir -p ", outdir, "glimma/MA/"))
+system(paste0("mkdir -p ", outdir, "tables/"))
+system(paste0("mkdir -p ", outdir, "plots/"))
+system(paste0("mkdir -p ", outdir, "glimma/mds/"))
 
 
 dt <- table_qza$data
@@ -1046,8 +1042,7 @@ lcpm_df_family <- lcpm_family%>%
 
 write_csv(lcpm_df_family, paste0(outdir, "TMM_normalised_log2_CPMs_family.csv"))
 
-system(paste0("mkdir -p ", outdir, "/glimma/mds/"))
-mds_save <-paste0(outdir,"/glimma/mds/", "MDS.html")
+mds_save <-paste0(outdir,"glimma/mds/", "MDS.html")
 
 htmlwidgets::saveWidget(glimmaMDS(counts, groups = bulk_anno$all_group,
                                   labels = bulk_anno), mds_save)
@@ -1059,7 +1054,7 @@ lcpm_batch_removed_family <- removeBatchEffect(lcpm_family,
                                                batch = bulk_anno$Run, 
                                                design = design2)
 
-mds_save <-paste0(outdir,"/glimma/mds/", "MDS_run_batch_removed.html")
+mds_save <-paste0(outdir,"glimma/mds/", "MDS_run_batch_removed.html")
 
 htmlwidgets::saveWidget(glimmaMDS(lcpm_batch_removed_family, groups = bulk_anno$all_group,
                                   labels = bulk_anno), mds_save)
@@ -1096,7 +1091,7 @@ toptable_run <- topTable(fit,coef="RunRun2",sort.by="p",number = Inf)%>%
   rownames_to_column("Gene")%>%
   write_csv(paste0(outdir,"toptables/", "Run", "_toptable.csv"))
 
-vol_save <- paste0(outdir,"/glimma/volcano/","Run", "_Volcano.html")
+vol_save <- paste0(outdir,"glimma/volcano/","Run", "_Volcano.html")
 
 htmlwidgets::saveWidget(glimmaVolcano(fit,coef="RunRun2", main = "Run2",
                                       counts = cpm(counts, log = T),transform.counts	= "none",
@@ -1121,13 +1116,13 @@ for(contrast in colnames(cont.matrix)){
     rownames_to_column("Gene")%>%
     write_csv(paste0(outdir,"toptreat/", contrast, "_toptreat.csv"))
   
-  vol_save <- paste0(outdir,"/glimma/volcano/",contrast, "_Volcano.html")
+  vol_save <- paste0(outdir,"glimma/volcano/",contrast, "_Volcano.html")
   
   htmlwidgets::saveWidget(glimmaVolcano(fit2, coef = contrast,main = gsub("_"," ",contrast),
                                         counts = cpm(counts, log = T),transform.counts	= "none",
                                         dge = counts, groups = bulk_anno$all_group), vol_save)
   
-  ma_save <- paste0(outdir,"/glimma/MA/",contrast, "_MA.html")
+  ma_save <- paste0(outdir,"glimma/MA/",contrast, "_MA.html")
   
   htmlwidgets::saveWidget(glimmaMA(fit2, coef = contrast,main = gsub("_"," ",contrast),
                                    counts = cpm(counts, log = T),transform.counts	= "none",
@@ -1186,72 +1181,67 @@ toptreat_signif <- toptreat_compiled %>%
   arrange(adj.P.Val)%>%
   write_csv(paste0(outdir, "Compiled_toptreat_significant_families.csv"))
 
-conts <- c("Inf_Const_1.5_Anti_vs_Inf_Typic_1.5_Anti",)
+conts <- c("Inf_Const_1.5_Anti_vs_Inf_Typic_1.5_Anti","Uni_Const_1.5_Anti_vs_Uni_Typic_1.5_Anti")
 
-toptreat <- toptreat_compiled%>%
-  filter(contrast == "Inf_Const_1.5_Anti_vs_Inf_Typic_1.5_Anti")
-
-# 1. Map the significance labels and clean the family names
-plot_data <- toptreat %>%
-  mutate(Significance = case_when(
-    adj.P.Val < 0.05 & logFC > log2(1.5) ~ "Increase",
-    adj.P.Val < 0.05 & logFC < -log2(1.5) ~ "Decrease",
-    TRUE ~ "Not differentially abundant"
-  )) %>%
-  # Lock in the factor order so the legend displays logically
-  mutate(Significance = factor(Significance, levels = c("Decrease", "Not differentially abundant", "Increase"))) %>%
-  # Clean up the family names by removing the "f__" prefix
-  mutate(Clean_Family = gsub("^f__", "", Gene))
-
-# 2. Set colors to match your requested line colors
-volcano_colors <- c(
-  "Increase" = "red", 
-  "Decrease" = "blue", 
-  "Not differentially abundant" = "grey80"
-)
-
-# 3. Generate the plot
-custom_volcano <- ggplot(plot_data, aes(x = logFC, y = -log10(adj.P.Val))) +
+for (cont in conts){
   
-  # Use shape = 21 for filled circles with borders. 
-  # color = "black" sets the border, fill is mapped to your groups.
-  geom_point(aes(fill = Significance), alpha = 0.7, size = 2, shape = 21, color = "black", stroke = 0.3) +
+  toptable_plot <- toptables_compiled %>%
+    filter(contrast == cont)
   
-  # Update the legend title here
-  scale_fill_manual(name = "Differential abundance", values = volcano_colors) +
+  # Safety check: skip to the next iteration if this contrast has absolutely no data
+  if(nrow(toptable_plot) == 0) {
+    message(paste("No data found for contrast:", cont, "- Skipping plot."))
+    next
+  }
   
-  # Add the ggrepel layer to label only the significant families
-  geom_text_repel(
-    data = filter(plot_data, Significance != "Not differentially abundant"),
-    aes(label = Clean_Family),
-    size = 3.5,
-    max.overlaps = 20,
-    show.legend = FALSE 
-  ) +
+  # 1. Map the significance labels and clean the family names
+  plot_data <- toptable_plot %>%
+    mutate(Significance = case_when(
+      adj.P.Val < 0.05 & logFC > 0 ~ "Increase",
+      adj.P.Val < 0.05 & logFC < 0 ~ "Decrease",
+      TRUE ~ "Not differentially abundant"
+    )) %>%
+    # Lock in the factor order so the legend displays logically
+    mutate(Significance = factor(Significance, levels = c("Decrease", "Not differentially abundant", "Increase"))) %>%
+    # Clean up the family names by removing the "f__" prefix
+    mutate(Clean_Family = gsub("^f__", "", Gene))
   
-  # Separate the lines: left is blue, right is red
-  geom_vline(xintercept = -log2(1.5), linetype = "dashed", color = "blue") +
-  geom_vline(xintercept = log2(1.5), linetype = "dashed", color = "red") +
-  
-  # Update labels using expression() for subscripts and negative sign
-  labs(
-    x = expression(Log[2]*"FC constant light relative to 12-hour light/12-hour dark"),
-    y = expression(-Log[10](P[adj]))
-  ) +
-  
-  theme_bw(base_size = 14) +
-  theme(
-    # Move legend ONTO the plot (0-1 coordinate system)
-    legend.position = c(0.80, 0.85),
-    # Add a semi-transparent box around the legend so it is readable over data points
-    legend.background = element_rect(fill = alpha("white", 0.8), color = "black", linewidth = 0.5)
+  # 2. Set colors to match your requested line colors
+  volcano_colors <- c(
+    "Increase" = "red", 
+    "Decrease" = "blue", 
+    "Not differentially abundant" = "grey80"
   )
-
-print(custom_volcano)
-
-# Save the plot 
-ggsave(filename = paste0(outdir, "plots/Custom_TREAT_Volcano_Family_Labeled.pdf"),
-       plot = custom_volcano, width = 8, height = 6)
+  
+  # 3. Generate the BASE plot
+  custom_volcano <- ggplot(plot_data, aes(x = logFC, y = -log10(adj.P.Val))) +
+    geom_point(aes(fill = Significance), alpha = 0.7, size = 2, shape = 21, color = "black", stroke = 0.3) +
+    scale_fill_manual(name = "Differential abundance", values = volcano_colors) +
+    labs(
+      x = expression(Log[2]*"FC constant light relative to 12-hour light/12-hour dark"),
+      y = expression(-Log[10](P[adj]))
+    ) +
+    theme_bw(base_size = 14) 
+  
+  # 4. Filter for significant data
+  sig_data <- filter(plot_data, Significance != "Not differentially abundant")
+  
+  # 5. Safely add ggrepel ONLY if there are significant points to label
+  if(nrow(sig_data) > 0) {
+    custom_volcano <- custom_volcano +
+      geom_text_repel(
+        data = sig_data,
+        aes(label = Clean_Family),
+        size = 3.5,
+        max.overlaps = 20,
+        show.legend = FALSE 
+      )
+  }
+  # Save the plot directly to PDF
+  ggsave(filename = paste0(outdir, "plots/", cont, "_custom_Volcano.pdf"),
+         plot = custom_volcano, width = 8, height = 6)
+  
+}
 
 # Family level composition plot
 family_counts_plot <- family_counts%>%
@@ -1263,7 +1253,7 @@ family_counts_plot <- family_counts%>%
   left_join(bulk_anno)%>%
   mutate(all_group = factor(all_group, levels = order))%>%
   mutate(Family_plot = replace(Family, pct_of_total < 1, "Other"))%>%
-  write_csv("./output_family_level/tables/Family level proportions table.csv")
+  write_csv(paste0(outdir, "tables/Family level proportions table.csv"))
 
 cbp32 <- c(
   "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000", 
@@ -1296,7 +1286,7 @@ family_plot_combined <- ggplot(data = family_counts_plot, aes(x = sample.id, y =
 
 family_plot_combined
 
-ggsave(filename = "./output_family_level/plots/family-abundance-plot-relative_all.pdf", 
+ggsave(filename = paste0(outdir, "plots/family-abundance-plot-relative_all.pdf"), 
        plot = family_plot_combined,
        width = 18, height = 7)
 
@@ -1311,7 +1301,7 @@ family_plot_r1 <- ggplot(data = family_counts_plot_r1, aes(x = sample.id, y = pc
   labs(x = "Condition", y = "% of total")+
   scale_fill_manual(values = family_colors)
 
-ggsave(filename = "./output_family_level/plots/family-abundance-plot-relative-r1_all.pdf", 
+ggsave(filename = paste0(outdir, "plots/family-abundance-plot-relative-r1_all.pdf"), 
        plot = family_plot_r1,
        width = 18, height = 7)
 
@@ -1326,7 +1316,7 @@ family_plot_r1 <- ggplot(data = family_counts_plot_r1, aes(x = sample.id, y = pc
   labs(x = "Condition", y = "% of total", fill = "Family")+
   scale_fill_manual(values = family_colors)
 
-ggsave(filename = "./output_family_level/plots/family-abundance-plot-relative-r1.pdf", 
+ggsave(filename = paste0(outdir, "plots/family-abundance-plot-relative-r1.pdf"), 
        plot = family_plot_r1,
        width = 18, height = 7)
 
@@ -1341,7 +1331,7 @@ family_plot_r2 <- ggplot(data = family_counts_plot_r2, aes(x = sample.id, y = pc
   labs(x = "Condition", y = "% of total")+
   scale_fill_manual(values = family_colors)
 
-ggsave(filename = "./output_family_level/plots/family-abundance-plot-relative-r2_all.pdf", 
+ggsave(filename = paste0(outdir, "plots/family-abundance-plot-relative-r2_all.pdf"), 
        plot = family_plot_r2,
        width = 18, height = 7)
 
@@ -1356,7 +1346,7 @@ family_plot_r2 <- ggplot(data = family_counts_plot_r2, aes(x = sample.id, y = pc
   labs(x = "Condition", y = "% of total", fill = "Family")+
   scale_fill_manual(values = family_colors)
 
-ggsave(filename = "./output_family_level/plots/family-abundance-plot-relative-r2.pdf", 
+ggsave(filename = paste0(outdir, "plots/family-abundance-plot-relative-r2.pdf"), 
        plot = family_plot_r2,
        width = 18, height = 7)
 
@@ -1408,11 +1398,11 @@ phylum_plot_r2 <- ggplot(data = phylum_counts_plot_r2,
           angle = 90))+
   labs(x = "Condition", y = "% of total")
 
-ggsave(filename = "./output_family_level/plots/phylum-abundance-plot_run_1.pdf", 
+ggsave(filename = paste0(outdir, "plots/phylum-abundance-plot_run_1.pdf"), 
        plot = phylum_plot_r1,
        width = 16, height = 5)
 
-ggsave(filename = "./output_family_level/plots/phylum-abundance-plot_run_2.pdf", 
+ggsave(filename = paste0(outdir, "plots/phylum-abundance-plot_run_2.pdf"), 
        plot = phylum_plot_r2,
        width = 16, height = 5)
 
@@ -1433,9 +1423,9 @@ family_abundance_plot <- ggplot(family_counts_plot_signif, aes(x = all_group, y 
   facet_wrap(~ Family, scales = "free_y", ncol = 3) + # Adjust ncol as needed
   # Add labels and titles
   labs(
-    title = "Relative abundance of all signifcant families across groups",
+    title = "Relative abundance of all significant families across groups",
     x = "Condition",
-    y = "Relative Abundance (%)" # Assuming your value is a percentage
+    y = "Relative abundance (%)" # Assuming your value is a percentage
   ) +
   # Apply a theme
   theme_bw() +
@@ -1448,7 +1438,7 @@ family_abundance_plot <- ggplot(family_counts_plot_signif, aes(x = all_group, y 
 
 family_abundance_plot
 
-ggsave(filename = "./output_family_level/plots/family-abundance-line-plot.pdf", plot = family_abundance_plot,
+ggsave(filename = paste0(outdir, "plots/family-abundance-line-plot.pdf"), plot = family_abundance_plot,
        width = 11,height = 10)
 
 # Keep only the bacteria that were DE
@@ -1483,7 +1473,7 @@ hm <- Heatmap(cpm_scaled, top_annotation = ha, name = "Row Z score",
               row_names_gp = gpar(fontsize = 10),
               row_names_max_width = unit(30, "cm"))
 
-pdf("./output_family_level/plots/DE_bacteria_heatmap_family.pdf", width = 20, height = 10) 
+pdf(paste0(outdir, "plots/DE_bacteria_heatmap_family.pdf"), width = 20, height = 10) 
 draw(hm) 
 dev.off()  
 
@@ -1494,5 +1484,4 @@ family_long <- lcpm_df_family%>%
   write_csv(paste0(outdir, "Family_log2CPMs_ggplot2_format.csv"))
 
 # Save the R session info for methods section
-writeLines(capture.output(sessionInfo()), paste0("./sessioninfo/Session_info_abundance.txt"))
-
+writeLines(capture.output(sessionInfo()), paste0(outdir, "Session_info_abundance.txt"))
