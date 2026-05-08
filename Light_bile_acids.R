@@ -29,7 +29,7 @@ dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, "plots"), recursive = TRUE, showWarnings = FALSE) # Ensure plots dir exists
 
 # Read in the protein data
-acids <- read_csv(file.path(".", "bile_acids_input", "Bile_acids.csv"))
+acids <- read_csv(file.path(".", "Bile_acids_input", "Bile_acids.csv"))
 
 acids_mat <- as.matrix(acids[,2:ncol(acids)])
 rownames(acids_mat) <- acids$Filename
