@@ -7,7 +7,7 @@ All samples were processed and analysed in parallel. This broad inclusion allows
 While the dataset encompasses this wider timeline, the primary focus of the downstream analysis and specific contrasts is at **36 hours post-infection**. This timepoint was chosen because it represents the window of maximal protection during circadian disruption, corresponding to a 90% increase in survival.
 
 ## Environment & Reproducibility
-All analyses were run under R 4.4.0. Exact R package versions for each specific analysis (Transcriptomics, Metabolomics, Bile Acids, Abundance) can be found in the generated text files within the `sessioninfo/` directory.
+Analyses were run under **R 4.4.0**, with the exception of the general metabolomics profiling which was run under **R 4.5.1**. Exact R package versions for each specific analysis (Transcriptomics, Metabolomics, Bile Acids, Abundance) can be found in the generated text files within the `sessioninfo/` directory.
 
 ## Analysis Pipelines
 

@@ -1,6 +1,5 @@
 library(tidyverse)
 library(Rsubread)
-library(qs)
 library(limma)
 library(edgeR)
 library(Glimma)
@@ -324,4 +323,4 @@ GSVA <- ggplot(data = scores, aes(x = light_inf, y = GSVA_score, colour = light_
 ggsave(plot = GSVA, filename = file.path(outdir, "plots", "GSVA_boxplot_key_gene_sets.pdf"), 
        width = 200, height = 170, units = "mm")
 
-writeLines(capture.output(sessionInfo()), file.path(".", "sessioninfo", "transcriptomics_session_info.txt"))
+writeLines(capture.output(sessionInfo()), file.path(".", "sessioninfo", "Session_info_transcriptomics.txt"))
