@@ -27,7 +27,3 @@ Transcriptomic count data and metadata are provided in the `Transcriptomics_inpu
 ### 3. Metabolomics
 The raw data for the general metabolomics profiling is located in the `Metabolomics_inputs/` folder.
 * **To reproduce the analysis:** Run `Light_metabolomics_analysis.R` to reproduce the differential abundance statistics, UMAPs, Volcano plots, and heatmaps for the identified metabolites.
-
-### 4. Bile Acids
-The targeted bile acid profiling data is located in the `bile_acids_input/` folder.
-* **To reproduce the analysis:** Run `Light_bile_acids.R` to reproduce the normalisation, differential abundance testing, UMAPs, and Volcano plots specifically for the bile acid panel.
