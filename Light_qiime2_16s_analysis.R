@@ -551,7 +551,7 @@ for(run in unique(bulk_anno$Run)){
   
 }
 
-# Compare Des' groups of interest
+# Compare groups of interest
 
 # Final filter from your script: Groups of interest from Run2
 bulk_run <- bulk_anno %>%
@@ -1289,7 +1289,7 @@ if(exists("toptables_signif") && nrow(toptables_signif) > 0) {
   dev.off()  
 }
 
-# Make a plotting object for DES.
+# Make a plotting object.
 family_long <- lcpm_df_family%>%
   pivot_longer(cols = -Family, names_to = "sample.id", values_to = "log2CPM")%>%
   left_join(bulk_anno, by = "sample.id")%>%
