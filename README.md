@@ -9,11 +9,11 @@ While the dataset encompasses this wider timeline, the primary focus of the down
 Not that "typical light" here refers to the standard light-dark conditions of a 12-hour light/12-hour dark cycle in the paper.
 
 ## Environment & Reproducibility
-Analyses were run under **R 4.4.0**, with the exception of the general metabolomics profiling which was run under **R 4.5.1**. Exact R package versions for each specific analysis (Transcriptomics, Metabolomics, Bile Acids, Abundance) can be found in the generated text files within the `sessioninfo/` directory.
+Analyses were run under **R 4.4.0**, with the exception of the general metabolomics profiling which was run under **R 4.5.1**. Exact R package versions for each specific analysis (transcriptomics, metabolomics, gut bacterial species abundance from 16S rDNA sequencing) can be found in the generated text files within the `sessioninfo/` directory.
 
 ## Analysis Pipelines
 
-### 1. Species Abundance (16S rRNA)
+### 1. Species Abundance (16S rDNA sequencing analysis)
 The `Qiime2_pipeline.sh` script documents the exact commands used to generate abundance level counts from raw reads. 
 * The counts and objects from this pipeline are available in this repository under the `Qiime2/` directory. 
 * The associated metadata is located in the `Metadata/` directory.
@@ -28,4 +28,4 @@ Transcriptomic count data and metadata are provided in the `Transcriptomics_inpu
 
 ### 3. Metabolomics
 The raw data for the general metabolomics profiling is located in the `Metabolomics_inputs/` folder.
-* **To reproduce the analysis:** Run `Light_metabolomics_analysis.R` to reproduce the differential abundance statistics, UMAPs, Volcano plots, and heatmaps for the identified metabolites.
+* **To reproduce the analysis:** Run `Light_metabolomics_analysis.R` to reproduce the differential abundance statistics, UMAPs, and volcano plots for the identified metabolites.
