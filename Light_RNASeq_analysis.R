@@ -1,6 +1,5 @@
 library(tidyverse)
 library(Rsubread)
-library(qs)
 library(limma)
 library(edgeR)
 library(Glimma)
