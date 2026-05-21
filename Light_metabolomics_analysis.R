@@ -36,7 +36,7 @@ protein <- read_csv(file.path(".", "Metabolomics_inputs", "P21_0421_Exp5_StatsTa
 duplicated_row <- protein[,grepl("Allysine", colnames(protein))]
 
 protein_mat <- as.matrix(protein[,3:ncol(protein)])
-rownames(protein_mat) <- protein$sample
+rownames(protein_mat) <- protein$Sample
 
 protein_mat <- t(protein_mat)
 
