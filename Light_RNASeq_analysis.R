@@ -3,7 +3,7 @@ library(Rsubread)
 library(limma)
 library(edgeR)
 library(Glimma)
-library(biomaRt)
+#library(biomaRt)
 library(GSA)
 library(parallel)
 library(GSVA)
@@ -218,7 +218,6 @@ for(i in 1:length(collections)){
 }
 
 dir.create(file.path(outdir, "gsea", "camera"), recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path(outdir, "gsea", "fry"), recursive = TRUE, showWarnings = FALSE)
 
 names_df <- data.frame(names(collections_all))
 indexed <- ids2indices(gene.sets = collections_all, identifiers = rnaseq$genes$mgi_symbol, remove.empty=TRUE)
@@ -231,12 +230,6 @@ for(contrast in colnames(cont.matrix)){
     mutate(Contrast= contrast) %>%
     write_csv(file.path(outdir, "gsea", "camera", paste0(contrast, ".csv")))
   
-  fry_result <- fry(y = v, index = indexed, design = design, contrast = cont.matrix[,contrast]) %>%
-    rownames_to_column("Gene set") %>%
-    dplyr::select(`Gene set`, "NGenes" , "Direction", "PValue", "FDR") %>%
-    filter(FDR <= 0.05) %>%
-    mutate(Contrast= contrast) %>%
-    write_csv(file.path(outdir, "gsea", "fry", paste0(contrast, ".csv")))
 }
 
 # Compile the camera results
@@ -255,24 +248,6 @@ if(length(clist) > 0) {
     mutate(FDR = as.numeric(FDR)) %>%
     arrange(FDR) %>%
     write_csv(file.path(outdir, "Compiled_significant_gene_sets_camera.csv"))
-}
-
-# Compile Fry results
-all_fry <- list.files(file.path(outdir, "gsea", "fry"), full.names = TRUE)
-clist <- list()
-for(i in seq_along(all_fry)){
-  contrast_name <- gsub("\\.csv$", "", basename(all_fry[i]))
-  tt <- read_csv(all_fry[i], col_types = cols(.default = "c")) %>%
-    mutate(contrast = contrast_name) %>%
-    dplyr::select(-Contrast)
-  clist[[i]] <- tt
-}
-
-if(length(clist) > 0) {
-  fry_compiled <- bind_rows(clist) %>%
-    mutate(FDR = as.numeric(FDR)) %>%
-    arrange(FDR) %>%
-    write_csv(file.path(outdir, "Compiled_significant_gene_sets_fry.csv"))
 }
 
 # Compile the toptables
