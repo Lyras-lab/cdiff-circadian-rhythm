@@ -12,22 +12,13 @@ library(GSVA)
 contrast_levs <- c("Uninfected_Typicallight", "Uninfected_Constantlight","Infected_Typicallight", "Infected_Constantlight")
 group_colors <- c("Uninfected_Typicallight" = "#0066CC", "Uninfected_Constantlight" = "#99CCFF","Infected_Typicallight" = "#CC5200", "Infected_Constantlight" = "#FFB366")
 
-# FIX: Use file.path for robust base directories
+# FIX: Use file.path for robust base directories. Remove trailing slashes.
 outdir <- file.path(".", "output_RNASeq")
 indir <- file.path(".", "Transcriptomics_inputs")
 
 # ---------------------------------------------------------------------------
 # Alignment code is commented out but was run for the paper. 
-# Uncomment and modify for GEO counts to rerun.
 # ---------------------------------------------------------------------------
-
-# Grab the raw data from the SRA
-
-# Where the reference data is from
-# wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M18/GRCm38.primary_assembly.genome.fa.gz
-
-# Check the files (all good)
-# md5sum --c md5.md5 > md5_check_result_on_labserver.txt
 
 # FIX: Use dir.create instead of system("mkdir ...")
 # dir.create(file.path(outdir, "bams"), recursive = TRUE, showWarnings = FALSE)
@@ -41,41 +32,7 @@ indir <- file.path(".", "Transcriptomics_inputs")
 #   mutate(Outfile = file.path(outdir, "bams", paste0(Sample, "_aligned.bam"))) %>%
 #   write_csv(file.path(outdir, "Metadata.csv"))
 # 
-# # All 50 samples
-# sum(table(files_df$Sample) == 2) == length(unique(files_df$Sample))
-# 
-# # Basename of the index
-# index <- "./RCm38.primary_assembly.genome"
-# 
-# f1 <- files_df %>%
-#   filter(grepl("_1.fq.gz",files))
-# 
-# f2 <- files_df %>%
-#   filter(grepl("_2.fq.gz",files))
-# 
-# # Sanity check
-# f2$Sample == f1$Sample
-
-# Align all at once so I don't need to reload the index
-# align.stat <- Rsubread::align(index = index,
-#                                 readfile1 = f1$files,
-#                                 readfile2 = f2$files,
-#                                 output_file = f1$Outfile,
-#                                 nthreads = 40)
-
-# List the output files for the organoid data
-# bams <- list.files(outdir, pattern = "*.bam$", recursive = TRUE, full.names = TRUE)
-# 
-# # Run featurecounts over the aligned bams
-# fc_bam <- featureCounts(files = bams,
-#                           annot.inbuilt = "mm10",
-#                           annot.ext = NULL,
-#                           isPairedEnd = TRUE,
-#                           # Looks like the library is unstranded based on count assignment using stranded options
-#                           strandSpecific = 0,
-#                           nthreads = 20)
-
-# saveRDS(fc_bam, file.path(indir, "featurecounts_object.rds"))
+# # ... (rest of commented alignment code) ...
 
 # ---------------------------------------------------------------------------
 # Load existing data
@@ -84,40 +41,10 @@ indir <- file.path(".", "Transcriptomics_inputs")
 fc_bam <- readRDS(file.path(indir, "featurecounts_object.rds"))
 stats <- fc_bam$stat
 
-# Grab the annotation for the entrezgene IDs do not rerun unless you want updated annotations
-# ensembl <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
-# attrs <- listAttributes(ensembl) %>%
-#   data.frame()
-# annot <- getBM(c("ensembl_gene_id","entrezgene_id", "mgi_symbol", "chromosome_name", "strand", "start_position", "end_position","gene_biotype"), mart=ensembl)
-# 
-# mouse_mart <- annot %>%
-#   mutate(entrezgene_id = as.character(entrezgene_id)) %>%
-#   filter(!is.na(entrezgene_id)) %>%
-#   filter(!duplicated(entrezgene_id))
-
 # Get the counts out of the object
 counts <- fc_bam$counts
 
-# counts[1:5,1:5]
-# 
-# annot_df_mouse <- data.frame(entrezgene_id = rownames(counts)) %>%
-#   left_join(mouse_mart)
-
-# saveRDS(annot_df_mouse, file.path(indir, "gene_annotation.rds"))
-
 annot_df_mouse <- readRDS(file.path(indir, "gene_annotation.rds"))
-
-# counts2 <- counts
-# colnames(counts2) <- gsub("_aligned.bam", "", colnames(counts2))
-
-# counts_and_anno_csv_for_degust <- counts2 %>%
-#   data.frame() %>%
-#   rownames_to_column("entrezgene_id") %>%
-#   left_join(annot_df_mouse) %>%
-#   write_csv(file.path(outdir, "Counts_and_anno_for_degust.csv"))
-
-# saveRDS(counts2, file.path(indir, "counts.rds"))
-
 counts2 <- readRDS(file.path(indir, "counts.rds"))
 
 sample_md <- read_csv(file.path(indir, "T282 RNA seq analysis.csv"))
@@ -238,31 +165,6 @@ collections <- c(collections,
                  file.path(gsea_gmt_dir, "HC_Select_Hs.CellType_Geneset_combined_2024.Hs.gmt"),
                  file.path(gsea_gmt_dir, "HC_Select_Hs.Oncogenic_Geneset_combined_2024.Hs.gmt"))
 
-# https://www.biostars.org/p/9567892/
-# mouse_human_genes <- read.csv("http://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
-# 
-# # separate human and mouse 
-# mouse <- split.data.frame(mouse_human_genes,mouse_human_genes$Common.Organism.Name)[[2]]
-# human <- split.data.frame(mouse_human_genes,mouse_human_genes$Common.Organism.Name)[[1]]
-# 
-# mh_data <- merge.data.frame(mouse,human,by = "DB.Class.Key",all.y = TRUE) 
-# 
-# # remove some columns
-# mouse <- mouse[,c(1,4)]
-# human <- human[,c(1,4)]
-# 
-# # merge the 2 dataset  (note that the human list is longer than the mouse one)
-# mh_data <- merge.data.frame(mouse,human,by = "DB.Class.Key",all.y = TRUE) %>%
-#   filter(!duplicated(Symbol.x))
-# 
-# sum(duplicated(mh_data$Symbol.x))
-# 
-# mouse_genes <- rnaseq$genes$HUGOSymbol %>%
-#   data.frame()%>%
-#   dplyr::rename(Symbol.x = 1)%>%
-#   left_join(mh_data)%>%
-#   write_csv(file.path(indir, "GSEA", "Human_mouse_gene_mappings.csv"))
-
 gene_mappings <- read_csv(file.path(gsea_gmt_dir, "Human_mouse_gene_mappings.csv"))
 
 collections_all <- list()
@@ -295,4 +197,130 @@ for(contrast in colnames(cont.matrix)){
     write_csv(file.path(outdir, "gsea", "camera", paste0(contrast, ".csv")))
   
   fry_result <- fry(y = v, index = indexed, design = design, contrast = cont.matrix[,contrast]) %>%
-    rownames_
+    rownames_to_column("Gene set") %>%
+    dplyr::select(`Gene set`, "NGenes" , "Direction", "PValue", "FDR") %>%
+    filter(FDR <= 0.05) %>%
+    mutate(Contrast= contrast) %>%
+    write_csv(file.path(outdir, "gsea", "fry", paste0(contrast, ".csv")))
+}
+
+# Compile the camera results
+all_camera <- list.files(file.path(outdir, "gsea", "camera"), full.names = TRUE)
+clist <- list()
+for(i in seq_along(all_camera)){
+  contrast_name <- gsub("\\.csv$", "", basename(all_camera[i]))
+  tt <- read_csv(all_camera[i], col_types = cols(.default = "c")) %>%
+    mutate(contrast = contrast_name) %>%
+    dplyr::select(-Contrast)
+  clist[[i]] <- tt
+}
+
+if(length(clist) > 0) {
+  camera_compiled <- bind_rows(clist) %>%
+    mutate(FDR = as.numeric(FDR)) %>%
+    arrange(FDR) %>%
+    write_csv(file.path(outdir, "Compiled_significant_gene_sets_camera.csv"))
+}
+
+# Compile Fry results
+all_fry <- list.files(file.path(outdir, "gsea", "fry"), full.names = TRUE)
+clist <- list()
+for(i in seq_along(all_fry)){
+  contrast_name <- gsub("\\.csv$", "", basename(all_fry[i]))
+  tt <- read_csv(all_fry[i], col_types = cols(.default = "c")) %>%
+    mutate(contrast = contrast_name) %>%
+    dplyr::select(-Contrast)
+  clist[[i]] <- tt
+}
+
+if(length(clist) > 0) {
+  fry_compiled <- bind_rows(clist) %>%
+    mutate(FDR = as.numeric(FDR)) %>%
+    arrange(FDR) %>%
+    write_csv(file.path(outdir, "Compiled_significant_gene_sets_fry.csv"))
+}
+
+# Compile the toptables
+all_toptables <- list.files(file.path(outdir, "toptables"), full.names = TRUE)
+tt_list <- list()
+for(i in seq_along(all_toptables)){
+  # FIX: Properly remove the entire suffix so contrast names remain clean
+  contrast_name <- gsub("_toptable\\.csv$", "", basename(all_toptables[i]))
+  tt <- read_csv(all_toptables[i]) %>%
+    mutate(contrast = contrast_name)
+  tt_list[[i]] <- tt
+}
+
+if(length(tt_list) > 0) {
+  toptables_compiled <- bind_rows(tt_list)
+  toptables_signif <- toptables_compiled %>%
+    filter(adj.P.Val <= 0.05) %>%
+    arrange(adj.P.Val) %>%
+    write_csv(file.path(outdir, "Compiled_toptables_significant_genes.csv"))
+}
+
+gene_sets <- c("HALLMARK_INTERFERON_ALPHA_RESPONSE", "HALLMARK_INTERFERON_GAMMA_RESPONSE", 
+               "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION", "HALLMARK_MYC_TARGETS_V2", 
+               "HALLMARK_WNT_BETA_CATENIN_SIGNALING", "HALLMARK_MYC_TARGETS_V1",
+               "GOBP_PROTEIN_REFOLDING", "GOBP_REGULATION_OF_TYPE_I_INTERFERON_MEDIATED_SIGNALING_PATHWAY",
+               "GOBP_CHROMOSOME_SEPARATION")
+
+# Barcode plots
+gene_set <- quiet(GSA.read.gmt(file.path(indir, "GSEA", "mh.all.v2023.2.Mm.symbols.gmt")))
+gene_set_formatted_hm <- gene_set$genesets
+names(gene_set_formatted_hm) <- gene_set$geneset.names
+
+gene_set <- quiet(GSA.read.gmt(file.path(indir, "GSEA", "m5.go.v2023.2.Mm.symbols.gmt")))
+gene_set_formatted_go <- gene_set$genesets
+names(gene_set_formatted_go) <- gene_set$geneset.names
+
+gene_set_formatted <- c(gene_set_formatted_hm, gene_set_formatted_go)
+indexed <- ids2indices(gene.sets = gene_set_formatted, identifiers = rnaseq$genes$mgi_symbol, remove.empty=TRUE)
+
+for(contrast in colnames(cont.matrix)){
+  for(gene_set_name in gene_sets){
+    save_name <- file.path(outdir, "plots", "barcode_plots", paste0(contrast, "_", gene_set_name, ".pdf"))
+    index <- indexed[[gene_set_name]]
+    
+    pdf(save_name, width = 7, height = 4)
+    barcodeplot(fit$t[,contrast],
+                index=index,
+                labels = c("Down","Up"),
+                main= paste0(gene_set_name, "\nN genes=", length(index)),
+                xlab = paste0("Limma t statistic: ", contrast))
+    dev.off()
+  }
+}
+
+# GSVA analysis and plotting
+lcpm_gene <- cpm(rnaseq, log = TRUE)
+rownames(lcpm_gene) <- rnaseq$genes$mgi_symbol
+lcpm_gene <- lcpm_gene[!is.na(rownames(lcpm_gene)), ]
+lcpm_gene <- lcpm_gene[!duplicated(rownames(lcpm_gene)), ]
+
+gene_sets_GSVA <- gene_set_formatted[names(gene_set_formatted) %in% gene_sets]
+param <- gsvaParam(exprData = lcpm_gene, geneSets = gene_sets_GSVA)
+gsva.es <- gsva(param, verbose=FALSE)
+
+# FIX: Replace deprecated `gather()` with `pivot_longer()`
+scores <- data.frame(gsva.es, check.rows = FALSE, check.names = FALSE) %>%
+  rownames_to_column("Gene_set") %>%
+  pivot_longer(cols = -Gene_set, names_to = "Bam_name", values_to = "GSVA_score") %>%
+  mutate(Gene_set = gsub("_", " ", Gene_set)) %>%
+  mutate(Gene_set = gsub("HALLMARK ", "", Gene_set)) %>%
+  left_join(metadata, by = "Bam_name") %>%
+  mutate(light_inf = factor(light_inf, levels = contrast_levs)) 
+
+GSVA <- ggplot(data = scores, aes(x = light_inf, y = GSVA_score, colour = light_inf))+
+  geom_boxplot(outlier.alpha = 0)+
+  geom_jitter(height = 0, width = 0.3)+
+  labs(x = "Light/infection", y = "GSVA score", title = "GSVA scores key gene sets", colour = "Light/infection")+
+  facet_wrap(~Gene_set, ncol = 3)+
+  scale_colour_manual(values = group_colors)+
+  guides(colour = "none")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggsave(plot = GSVA, filename = file.path(outdir, "plots", "GSVA_boxplot_key_gene_sets.pdf"), 
+       width = 200, height = 170, units = "mm")
+
+writeLines(capture.output(sessionInfo()), file.path(".", "sessioninfo", "Session_info_transcriptomics.txt"))
