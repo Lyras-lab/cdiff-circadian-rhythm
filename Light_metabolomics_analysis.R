@@ -97,6 +97,8 @@ rownames(design) <- colnames(log2_spectra_unique)
 
 hist(y.protein$E, breaks = 300)
 
+set.seed(42)
+
 um <- umap(t(y.protein$E))
 
 # Colours for umap
