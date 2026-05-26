@@ -26,13 +26,48 @@ indir <- file.path(".", "Transcriptomics_inputs")
 # # Find the fastq files
 # files <- list.files(file.path(".", "raw_data"), pattern = "*.fq.gz", full.names = TRUE, recursive = TRUE)
 # 
-# files_df <- data.frame(files) %>%
-#   mutate(Sample = basename(files)) %>%
-#   mutate(Sample = gsub("_1.fq.gz|_2.fq.gz", "", Sample)) %>%
-#   mutate(Outfile = file.path(outdir, "bams", paste0(Sample, "_aligned.bam"))) %>%
-#   write_csv(file.path(outdir, "Metadata.csv"))
+# files_df <- data.frame(files)%>%
+#   mutate(Sample = basename(files))%>%
+#   mutate(Sample = gsub("_1.fq.gz|_2.fq.gz", "", Sample))%>%
+#   mutate(Outfile = paste0(outdir,"/bams/",Sample,"_aligned.bam"))%>%
+#   write_csv(paste0(outdir, "Metadata.csv"))
 # 
-# # ... (rest of commented alignment code) ...
+# # All 50 samples
+# sum(table(files_df$Sample) ==2) == length(unique(files_df$Sample))
+# 
+# # Basename of the index
+# index <- "/pvol/andrew/reference/subread_mouse/GRCm38.primary_assembly.genome"
+# 
+# f1 <- files_df%>%
+#   filter(grepl("_1.fq.gz",files))
+# 
+# f2 <- files_df%>%
+#   filter(grepl("_2.fq.gz",files))
+# 
+# # Sanity check
+# f2$Sample ==f1$Sample
+
+# Align all at once so I don't need to reload the index
+# align.stat <- Rsubread::align(index=index,
+#                                 readfile1=f1$files,
+#                                 readfile2=f2$files,
+#                                 output_file=f1$Outfile,
+#                                 nthreads = 40)
+
+# List the output files for the organoid data
+# bams <- list.files(outdir,
+#                    pattern = "*.bam$", recursive = T, full.names = T)
+# 
+# # Run featurecounts over the aligned bams
+# fc_bam <- featureCounts(files = bams,
+#                         annot.inbuilt = "mm10",
+#                         annot.ext =NULL,
+#                         isPairedEnd = T,
+#                         # Looks like the library is unstranded based on count assignment using stranded options
+#                         strandSpecific = 0,
+#                         nthreads= 20)
+
+#qsave(fc_bam, paste0(outdir, "featurecounts_object.qs"))
 
 # ---------------------------------------------------------------------------
 # Load existing data
