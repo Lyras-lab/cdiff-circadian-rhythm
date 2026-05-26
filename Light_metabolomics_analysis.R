@@ -26,16 +26,17 @@ condition_colors <- c(
   "Inf_Const_light" = "#FFA040"   
 )
 
-outdir <- "./output_metabolomics/"
-system(paste0("mkdir -p ",outdir, "/plots/barcode_plots/"))
+# FIX: Use file.path for robust base directories
+outdir <- file.path(".", "output_metabolomics")
+dir.create(file.path(outdir, "plots", "barcode_plots"), recursive = TRUE, showWarnings = FALSE)
 
 # Read in the protein data
-protein <- read_csv("./Metabolomics_inputs/P21_0421_Exp5_StatsTable.csv")
+protein <- read_csv(file.path(".", "Metabolomics_inputs", "P21_0421_Exp5_StatsTable.csv"))
 
 duplicated_row <- protein[,grepl("Allysine", colnames(protein))]
 
 protein_mat <- as.matrix(protein[,3:ncol(protein)])
-rownames(protein_mat) <- protein$sample
+rownames(protein_mat) <- protein$Sample
 
 protein_mat <- t(protein_mat)
 
@@ -105,7 +106,7 @@ um <- umap(t(y.protein$E))
 umdf <- um%>%
   data.frame()%>%
   rownames_to_column("Sample")%>%
-  left_join(md)
+  left_join(md, by = "Sample")
 
 um_plot <- ggplot(data = umdf, aes(x = X1, y = X2, colour = Infection_light)) + 
   geom_point(size = 2) +
@@ -119,10 +120,10 @@ um_plot <- ggplot(data = umdf, aes(x = X1, y = X2, colour = Infection_light)) +
   scale_colour_manual(values = condition_colors) +
   labs(colour = "Infection/light", title = "All metabolites")
 
-ggsave(plot = um_plot,paste0(outdir, "/plots/Annotated UMAP.pdf"), 
+ggsave(plot = um_plot, filename = file.path(outdir, "plots", "Annotated UMAP.pdf"), 
        width = 100, height = 85, units = "mm")
 
-pdf(paste0(outdir, "/plots/Unnormalised_spectra.pdf"), width = 7, height = 5)
+pdf(file.path(outdir, "plots", "Unnormalised_spectra.pdf"), width = 7, height = 5)
 par(mar = c(7, 4.1, 4.1, 2.1))
 # Check distributions of samples using boxplots
 boxplot(log2_spectra, xlab="", ylab="Log2 counts",las=2)
@@ -152,7 +153,7 @@ fit3 <- eBayes(fit2)
 # Plot residual standard deviation versus average log 
 # expression for a fitted microarray linear model.
 
-pdf(paste0(outdir, "/plots/Limma SA.pdf"), width = 7, height = 5)
+pdf(file.path(outdir, "plots", "Limma SA.pdf"), width = 7, height = 5)
 # Check distributions of samples using boxplots
 plotSA(fit3)
 # Let's add a blue horizontal line that corresponds to the median logCPM
@@ -162,15 +163,14 @@ dev.off()
 summa.fit <- decideTests(fit3)
 summary(summa.fit)
 
-de_summary <- data.frame(summary(summa.fit), check.names = F)%>%
+de_summary <- data.frame(summary(summa.fit), check.names = FALSE)%>%
   dplyr::select(Contrast = 2, `Direction if significant` = 1, `Number of genes` = 3)%>%
   mutate(`Direction if significant` = factor(`Direction if significant`, levels = c("Up", "Down", "NotSig")))%>%
   arrange(`Direction if significant`, `Number of genes`)%>%
-  write_csv(paste0(outdir, "Significant_genes_summary.csv"))
+  write_csv(file.path(outdir, "Significant_genes_summary.csv"))
 
 plot_summary <- de_summary %>%
   filter(`Direction if significant`!= "NotSig")%>%
-  #filter(`Number of genes` >10)%>%
   mutate(`Number of genes` = replace(`Number of genes`, `Direction if significant` == "Down", `Number of genes`[`Direction if significant` == "Down"] *-1))%>%
   arrange(`Direction if significant`,-`Number of genes`)%>%
   mutate(Contrast = factor(Contrast, levels = unique(Contrast)))
@@ -178,30 +178,31 @@ plot_summary <- de_summary %>%
 ggplot(data = plot_summary, aes(y = Contrast, x = `Number of genes`, fill = `Direction if significant`))+
   geom_bar(stat = "identity")
 
-system(paste0("mkdir -p ", outdir, "/glimma/mds/"))
-mds_save <-paste0(outdir,"/glimma/mds/", "MDS.html")
+# FIX: Create directories natively
+dir.create(file.path(outdir, "glimma", "mds"), recursive = TRUE, showWarnings = FALSE)
+mds_save <- file.path(outdir, "glimma", "mds", "MDS.html")
 
 htmlwidgets::saveWidget(glimmaMDS(y.protein$E, groups = md$Infection_light,
                                   labels = md), mds_save)
 
-system(paste0("mkdir -p ", outdir, "/toptables"))
-system(paste0("mkdir -p ", outdir, "/glimma/volcano/"))
-system(paste0("mkdir -p ", outdir, "/glimma/MA/"))
+dir.create(file.path(outdir, "toptables"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, "glimma", "volcano"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, "glimma", "MA"), recursive = TRUE, showWarnings = FALSE)
 
 for(contrast in colnames(contrast.matrix)){
   
   toptable <- topTable(fit3,coef=contrast,sort.by="p",number = Inf)%>%
     rownames_to_column("Gene")%>%
-    write_csv(paste0(outdir,"toptables/", contrast, "_toptable.csv"))
+    write_csv(file.path(outdir, "toptables", paste0(contrast, "_toptable.csv")))
   
-  vol_save <- paste0(outdir,"/glimma/volcano/",contrast, "_Volcano.html")
+  vol_save <- file.path(outdir, "glimma", "volcano", paste0(contrast, "_Volcano.html"))
   
   htmlwidgets::saveWidget(glimmaVolcano(fit3, coef = contrast,main = gsub("_"," ",contrast),
                                         counts = y.protein$E,transform.counts	= "none",
                                         dge = fit3, groups = md$Infection_light,
                                         xlab = "log2_normalised_intensity_FC"), vol_save)
   
-  ma_save <- paste0(outdir,"/glimma/MA/",contrast, "_MA.html")
+  ma_save <- file.path(outdir, "glimma", "MA", paste0(contrast, "_MA.html"))
   
   htmlwidgets::saveWidget(glimmaMA(fit3, coef = contrast,main = gsub("_"," ",contrast),
                                    counts = y.protein$E,transform.counts	= "none",
@@ -210,38 +211,45 @@ for(contrast in colnames(contrast.matrix)){
   
 }
 
-system(paste0("rm -r ", outdir, "glimma/*/*_files"))
+# FIX: Native unlink instead of system("rm")
+files_to_remove <- list.files(file.path(outdir, "glimma"), pattern = "_files$", full.names = TRUE, recursive = TRUE, include.dirs = TRUE)
+unlink(files_to_remove, recursive = TRUE)
 
 # Compile the toptables
-all_toptables <- list.files(paste0(outdir, "toptables/"), full.names = T)
+all_toptables <- list.files(file.path(outdir, "toptables"), full.names = TRUE)
 
 tt_list <- list()
-for(i in 1:length(all_toptables)){
+for(i in seq_along(all_toptables)){
   
-  contrast <- gsub("_toptable.csv", "", basename(all_toptables[i]))
+  contrast <- gsub("_toptable\\.csv$", "", basename(all_toptables[i]))
   
   tt <- read_csv(all_toptables[i])%>%
     mutate(contrast = contrast)
   
   tt_list[[i]] <- tt
   
-  
 }
 
 # Compile toptables and save the significant results
-toptables_compiled <- bind_rows(tt_list)
-
-toptables_signif <- toptables_compiled %>%
-  filter(adj.P.Val <= 0.05)%>%
-  arrange(adj.P.Val)%>%
-  write_csv(paste0(outdir, "Compiled_toptables_significant_genes.csv"))
+if(length(tt_list) > 0) {
+  toptables_compiled <- bind_rows(tt_list)
+  
+  toptables_signif <- toptables_compiled %>%
+    filter(adj.P.Val <= 0.05)%>%
+    arrange(adj.P.Val)%>%
+    write_csv(file.path(outdir, "Compiled_toptables_significant_genes.csv"))
+}
 
 conts <- c("Uni_Const_light_vs_Uni_Typical_light","Inf_Const_light_vs_Inf_Typical_light")
 
 for (cont in conts){
   
+  if(!exists("toptables_compiled")) next
+  
   toptable_plot <- toptables_compiled%>%
     filter(contrast == cont)
+  
+  if(nrow(toptable_plot) == 0) next
   
   # 1. Map the significance labels and clean the family names
   plot_data <- toptable_plot %>%
@@ -296,7 +304,7 @@ for (cont in conts){
   print(custom_volcano)
   
   # Save the plot 
-  ggsave(filename = paste0(outdir, "plots/",cont, "_custom_Volcano.pdf"),
+  ggsave(filename = file.path(outdir, "plots", paste0(cont, "_custom_Volcano.pdf")),
          plot = custom_volcano, width = 8, height = 6)
   
 }
@@ -317,6 +325,9 @@ unique_df <- data.frame(unique_names)
 # Save the metabolite sets
 df_metabolites <- data.frame(Metabolite_Name = unique_names)
 
+# ---------------------------------------------------------------------------
+# Commented out KEGG queries code block
+# ---------------------------------------------------------------------------
 # listDatabases()
 # org <- keggList("organism")
 # org_df <- data.frame(org)
@@ -331,9 +342,7 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 #   query <- unique_names[i]
 #   
 #   if(nchar(query) == 0){
-#     
 #     next()
-#     
 #   }
 #   
 #   if(grepl("\\[", query)){
@@ -348,9 +357,7 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 #   
 #   # Skip this interation if nothing is found
 #   if(length(compound) == 0){
-#     
 #     next()
-#     
 #   }
 #   
 #   cdf <- data.frame(compound)%>%
@@ -376,11 +383,8 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 #   }
 #   
 #   if(nrow(cdf) == 0){
-#     
 #     next()
-#     
 #   }
-#   
 #   
 #   print(nrow(cdf))
 #   
@@ -452,26 +456,27 @@ df_metabolites <- data.frame(Metabolite_Name = unique_names)
 # 
 # head(metabolite_list)
 # 
-# saveRDS(metabolite_list, paste0(outdir,"/ref/metabolites_for_GSEA.rds"))
+# saveRDS(metabolite_list, file.path(outdir, "ref", "metabolites_for_GSEA.rds"))
+# ---------------------------------------------------------------------------
 
-metabolite_list <- readRDS("./Metabolomics_inputs/metabolites_for_GSEA.rds")
-# 
+metabolite_list <- readRDS(file.path(".", "Metabolomics_inputs", "metabolites_for_GSEA.rds"))
+
 # metabolo_list_df <- do.call(rbind, lapply(names(metabolite_list), function(n) {
 #   data.frame(Metabolite_set = n, Metabolite = metabolite_list[[n]], stringsAsFactors = FALSE)
 # }))
 # 
-# write_csv(metabolo_list_df, paste0(outdir,"/ref/metabolites_for_GSEA_data_frame.csv"))
+# write_csv(metabolo_list_df, file.path(outdir, "ref", "metabolites_for_GSEA_data_frame.csv"))
 
-metabolo_list_df <- read_csv("./Metabolomics_inputs/metabolites_for_GSEA_data_frame.csv")
+metabolo_list_df <- read_csv(file.path(".", "Metabolomics_inputs", "metabolites_for_GSEA_data_frame.csv"))
 
 rownames(y.protein$E)
 
 # Use the duplicated names for identification
 indexed <- ids2indices(gene.sets = metabolite_list, identifiers = rownames(y.protein$E), remove.empty=TRUE)
 
-# Make a directory
-system(paste0("mkdir -p ", outdir,"gsea/camera/"))
-system(paste0("mkdir -p ", outdir,"gsea/fry/"))
+# Make directories
+dir.create(file.path(outdir, "gsea", "camera"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, "gsea", "fry"), recursive = TRUE, showWarnings = FALSE)
 
 for(contrast in colnames(contrast.matrix)){
   
@@ -489,18 +494,18 @@ for(contrast in colnames(contrast.matrix)){
     dplyr::select(`Gene set`,"NGenes" , "Direction", "PValue", "FDR")%>%
     mutate(Contrast= contrast)
   
-  write_csv(camera_result, paste0(outdir,"gsea/camera/","Metabolites", "_", contrast,".csv"))
-  write_csv(fry_result, paste0(outdir,"gsea/fry/","Metabolites", "_", contrast,".csv"))
+  write_csv(camera_result, file.path(outdir, "gsea", "camera", paste0("Metabolites_", contrast, ".csv")))
+  write_csv(fry_result, file.path(outdir, "gsea", "fry", paste0("Metabolites_", contrast, ".csv")))
   
 }
 
 # Compile the camera results
-all_camera <- list.files(paste0(outdir,"gsea/camera/"), full.names = T)
+all_camera <- list.files(file.path(outdir, "gsea", "camera"), full.names = TRUE)
 
 clist <- list()
-for(i in 1:length(all_camera)){
+for(i in seq_along(all_camera)){
   
-  contrast <- gsub("\\.csv", "", basename(all_camera[i]))
+  contrast <- gsub("\\.csv$", "", basename(all_camera[i]))
   
   tt <- read_csv(all_camera[i], col_types = cols(.default = "c"))%>%
     mutate(contrast = contrast)%>%
@@ -510,19 +515,20 @@ for(i in 1:length(all_camera)){
   
 }
 
-# Compile toptables and save the significant results
-camera_compiled <- bind_rows(clist)%>%
-  mutate(FDR = as.numeric(FDR))%>%
-  arrange(FDR)%>%
-  write_csv(paste0(outdir, "Compiled_significant_gene_sets_camera.csv"))
+if(length(clist) > 0) {
+  camera_compiled <- bind_rows(clist)%>%
+    mutate(FDR = as.numeric(FDR))%>%
+    arrange(FDR)%>%
+    write_csv(file.path(outdir, "Compiled_significant_gene_sets_camera.csv"))
+}
 
 # Compile the fry results
-all_fry <- list.files(paste0(outdir,"gsea/fry/"), full.names = T)
+all_fry <- list.files(file.path(outdir, "gsea", "fry"), full.names = TRUE)
 
 clist <- list()
-for(i in 1:length(all_fry)){
+for(i in seq_along(all_fry)){
   
-  contrast <- gsub("\\.csv", "", basename(all_fry[i]))
+  contrast <- gsub("\\.csv$", "", basename(all_fry[i]))
   
   tt <- read_csv(all_fry[i], col_types = cols(.default = "c"))%>%
     mutate(contrast = contrast)%>%
@@ -532,86 +538,92 @@ for(i in 1:length(all_fry)){
   
 }
 
-# Compile toptables and save the significant results
-fry_compiled <- bind_rows(clist)%>%
-  mutate(FDR = as.numeric(FDR))%>%
-  arrange(-FDR)%>%
-  mutate(NGenes = as.numeric(NGenes))%>%
-  filter(NGenes>1)%>%
-  mutate(`Gene set` = factor(`Gene set`, levels = unique(`Gene set`)))%>%
-  write_csv(paste0(outdir, "Compiled_significant_gene_sets_fry.csv"))
-
-fry_compiled_plot <- fry_compiled%>%
-  filter(contrast == "Metabolites_Inf_Const_light_vs_Inf_Typical_light")
-
-inf_light <- toptables_compiled%>%
-  filter(contrast == "Inf_Const_light_vs_Inf_Typical_light")
-
-DE <- inf_light%>%
-  arrange(t)
-
-ranks <- as.numeric(DE$t)
-names(ranks) <- DE$Gene
-
-head(ranks)
-
-# Run FGSEA with our data
-# Gene set list is made up from the eggonog data
-fgseaRes <- fgsea(pathways = metabolite_list, 
-                  stats    = ranks,
-                  minSize  = 2,
-                  maxSize  = 2000)
-
-# Keep just the signifcant pathways
-fgseaRes_ordered <- fgseaRes%>%
-  arrange(padj)
+if(length(clist) > 0) {
+  fry_compiled <- bind_rows(clist)%>%
+    mutate(FDR = as.numeric(FDR))%>%
+    arrange(-FDR)%>%
+    mutate(NGenes = as.numeric(NGenes))%>%
+    filter(NGenes>1)%>%
+    mutate(`Gene set` = factor(`Gene set`, levels = unique(`Gene set`)))%>%
+    write_csv(file.path(outdir, "Compiled_significant_gene_sets_fry.csv"))
   
-fry_gene_sets <- ggplot(fry_compiled_plot, aes(x = -log10(FDR), y = `Gene set`, size = NGenes, color = Direction)) +
-  geom_point(alpha = 0.8) +
-  geom_segment(aes(x = 0, xend = -log10(FDR), y = `Gene set`, yend = `Gene set`, color = Direction), size = 0.8) +
-  scale_color_manual(values = c("Up" = "#E41A1C", "Down" = "#377EB8")) +  # Red for up, blue for down
-  scale_radius(breaks = c(2,4, 8, max(fry_compiled_plot$NGenes)))+
-  labs(
-    x = expression(-log[10]("FDR")),
-    y = "Gene Set",
-    size = "Gene Count",
-    color = "Direction"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    axis.text.y = element_text(size = 10),
-    panel.grid.minor = element_blank()
-  )+
-  ggtitle("Inf const light vs\ninf typical light (FDR < 0.05)")
+  fry_compiled_plot <- fry_compiled%>%
+    filter(contrast == "Metabolites_Inf_Const_light_vs_Inf_Typical_light")
+}
 
-fry_gene_sets
+if(exists("toptables_compiled")) {
+  inf_light <- toptables_compiled%>%
+    filter(contrast == "Inf_Const_light_vs_Inf_Typical_light")
+  
+  DE <- inf_light%>%
+    arrange(t)
+  
+  ranks <- as.numeric(DE$t)
+  names(ranks) <- DE$Gene
+  
+  head(ranks)
+  
+  # Run FGSEA with our data
+  # Gene set list is made up from the eggonog data
+  fgseaRes <- fgsea(pathways = metabolite_list, 
+                    stats    = ranks,
+                    minSize  = 2,
+                    maxSize  = 2000)
+  
+  # Keep just the signifcant pathways
+  fgseaRes_ordered <- fgseaRes%>%
+    arrange(padj)
+}
 
-ggsave(plot = fry_gene_sets, filename = paste0(outdir, "/plots/", "Fry_gene_sets_Inf_Const_light_vs_Inf_Typical_light.pdf"),width = 10, height = 7)
+if(exists("fry_compiled_plot") && nrow(fry_compiled_plot) > 0) {
+  fry_gene_sets <- ggplot(fry_compiled_plot, aes(x = -log10(FDR), y = `Gene set`, size = NGenes, color = Direction)) +
+    geom_point(alpha = 0.8) +
+    geom_segment(aes(x = 0, xend = -log10(FDR), y = `Gene set`, yend = `Gene set`, color = Direction), size = 0.8) +
+    scale_color_manual(values = c("Up" = "#E41A1C", "Down" = "#377EB8")) +  # Red for up, blue for down
+    scale_radius(breaks = c(2,4, 8, max(fry_compiled_plot$NGenes)))+
+    labs(
+      x = expression(-log[10]("FDR")),
+      y = "Gene Set",
+      size = "Gene Count",
+      color = "Direction"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      axis.text.y = element_text(size = 10),
+      panel.grid.minor = element_blank()
+    )+
+    ggtitle("Inf const light vs\ninf typical light (FDR < 0.05)")
+  
+  fry_gene_sets
+  
+  ggsave(plot = fry_gene_sets, filename = file.path(outdir, "plots", "Fry_gene_sets_Inf_Const_light_vs_Inf_Typical_light.pdf"), width = 10, height = 7)
+}
 
 # Make some barcode plots of some key gene sets
 colnames(contrast.matrix)
 
-# Make a barcodeplot for all gene sets that were significant for Inf_Const_light_vs_Inf_Typical_light
-for(gene_set in unique(c(as.character(fry_compiled$`Gene set`), as.character(camera_compiled$`Gene set`)))){
-  
-  print(gene_set)
-  
-  save_name <- paste0(outdir, "plots/barcode_plots/Inf_Const_light_vs_Inf_Typical_light_", 
-                      gene_set ,".pdf")
-  
-  index <- indexed[[gene_set]]
-  
-  pdf(save_name, width = 7, height = 4)
-  barcodeplot(fit3$t[,"Inf_Const_light_vs_Inf_Typical_light"],
-              index=index,
-              labels = c("Down","Up"),
-              main= paste0(gene_set, "\nN metabolites=", length(index)),
-              xlab = "Limma t statistic: Inf const light vs inf typical light")
-  dev.off()
-  
+if(exists("fry_compiled") && exists("camera_compiled")) {
+  # Make a barcodeplot for all gene sets that were significant for Inf_Const_light_vs_Inf_Typical_light
+  for(gene_set in unique(c(as.character(fry_compiled$`Gene set`), as.character(camera_compiled$`Gene set`)))){
+    
+    print(gene_set)
+    
+    save_name <- file.path(outdir, "plots", "barcode_plots", paste0("Inf_Const_light_vs_Inf_Typical_light_", gene_set, ".pdf"))
+    
+    index <- indexed[[gene_set]]
+    
+    pdf(save_name, width = 7, height = 4)
+    barcodeplot(fit3$t[,"Inf_Const_light_vs_Inf_Typical_light"],
+                index=index,
+                labels = c("Down","Up"),
+                main= paste0(gene_set, "\nN metabolites=", length(index)),
+                xlab = "Limma t statistic: Inf const light vs inf typical light")
+    dev.off()
+    
+  }
 }
 
-gene_set_heatmap_metabolo <- function(index, desc, small = F){
+gene_set_heatmap_metabolo <- function(index, desc, small = FALSE){
   
   md_orderd <- md %>%
     arrange(Infection_light)
@@ -624,22 +636,22 @@ gene_set_heatmap_metabolo <- function(index, desc, small = F){
   
   ha = HeatmapAnnotation(Condition = md_orderd$Infection_light,
                          col = list(Condition=condition_colors))
- 
-  if(small == T){
+  
+  if(small == TRUE){
     
     Heatmap(genes,column_title = desc, name = "Z score", row_names_side = "left",top_annotation = ha,
             row_names_gp = gpar(fontsize = 5),
             column_title_gp = gpar(fontsize = 7),
-            row_names_max_width = unit(30, "cm"), cluster_columns = F, column_split = md_orderd$Infection_light)
+            row_names_max_width = unit(30, "cm"), cluster_columns = FALSE, column_split = md_orderd$Infection_light)
     
   }else{
     Heatmap(genes,column_title = desc, name = "Z score", row_names_side = "left",top_annotation = ha,
-            cluster_columns = F, column_split = md_orderd$Infection_light)
+            cluster_columns = FALSE, column_split = md_orderd$Infection_light)
   }
-
+  
 }
 
-gene_set_heatmap_metabolo_inf <- function(index, desc, small = F){
+gene_set_heatmap_metabolo_inf <- function(index, desc, small = FALSE){
   
   md_orderd <- md %>%
     arrange(Infection_light)%>%
@@ -655,50 +667,56 @@ gene_set_heatmap_metabolo_inf <- function(index, desc, small = F){
   ha = HeatmapAnnotation(Condition = md_orderd$Infection_light,
                          col = list(Condition=condition_colors))
   
-  if(small == T){
+  if(small == TRUE){
     
     Heatmap(genes,column_title = desc, name = "Z score", row_names_side = "left",top_annotation = ha,
             row_names_gp = gpar(fontsize = 5),
             column_title_gp = gpar(fontsize = 7),
-            row_names_max_width = unit(30, "cm"), cluster_columns = F, column_split = md_orderd$Infection_light)
+            row_names_max_width = unit(30, "cm"), cluster_columns = FALSE, column_split = md_orderd$Infection_light)
     
   }else{
     Heatmap(genes,column_title = desc, name = "Z score", row_names_side = "left",top_annotation = ha,
-            cluster_columns = F, column_split = md_orderd$Infection_light)
+            cluster_columns = FALSE, column_split = md_orderd$Infection_light)
   }
   
 }
 
 
-system(paste0("mkdir -p ", outdir,"plots/heatmaps/"))
-system(paste0("mkdir -p ", outdir,"plots/heatmaps_inf/"))
+dir.create(file.path(outdir, "plots", "heatmaps"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, "plots", "heatmaps_inf"), recursive = TRUE, showWarnings = FALSE)
 
-# Make for loop to run the heatmap function for all signifcant gene sets
-for(gene_set in unique(fry_compiled$`Gene set`)){
+if(exists("fry_compiled")) {
+  # Make for loop to run the heatmap function for all signifcant gene sets
+  for(gene_set in unique(fry_compiled$`Gene set`)){
+    
+    print(gene_set)
+    
+    save_name <- file.path(outdir, "plots", "heatmaps", paste0(gene_set, ".pdf"))
+    
+    pdf(save_name, width = 14, height = 4 + (0.5*length(indexed[[gene_set]])))
+    hm <- gene_set_heatmap_metabolo(indexed[[gene_set]] , desc =  gene_set)
+    draw(hm) 
+    dev.off()
+    
+  }
   
-  print(gene_set)
-  
-  save_name <- paste0(outdir, "plots/heatmaps/", gene_set ,".pdf")
-  
-  pdf(save_name, width = 14, height = 4 + (0.5*length(indexed[[gene_set]])))
-  hm <- gene_set_heatmap_metabolo(indexed[[gene_set]] , desc =  gene_set)
-  draw(hm) 
-  dev.off()
-  
+  for(gene_set in unique(fry_compiled$`Gene set`)){
+    
+    print(gene_set)
+    
+    save_name <- file.path(outdir, "plots", "heatmaps_inf", paste0(gene_set, ".pdf"))
+    
+    pdf(save_name, width = 14, height = 4 + (0.5*length(indexed[[gene_set]])))
+    hm <- gene_set_heatmap_metabolo_inf(indexed[[gene_set]] , desc =  gene_set)
+    draw(hm) 
+    dev.off()
+    
+  }
 }
 
-for(gene_set in unique(fry_compiled$`Gene set`)){
-  
-  print(gene_set)
-  
-  save_name <- paste0(outdir, "plots/heatmaps_inf/", gene_set ,".pdf")
-  
-  pdf(save_name, width = 14, height = 4 + (0.5*length(indexed[[gene_set]])))
-  hm <- gene_set_heatmap_metabolo_inf(indexed[[gene_set]] , desc =  gene_set)
-  draw(hm) 
-  dev.off()
-  
-}
-
-# Save the R session info for methods section
-writeLines(capture.output(sessionInfo()), paste0("./sessioninfo/Session_info_metabolomics.txt"))
+# ---------------------------------------------------------------------------
+# Session Info Export
+# ---------------------------------------------------------------------------
+session_dir <- file.path(".", "Code_for_submission", "sessioninfo")
+dir.create(session_dir, recursive = TRUE, showWarnings = FALSE)
+writeLines(capture.output(sessionInfo()), file.path(session_dir, "Session_info_metabolomics.txt"))

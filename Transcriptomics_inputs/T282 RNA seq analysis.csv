@@ -1,0 +1,18 @@
+﻿Sample,Sample name on tube,body-site,year,month,day,subject,reported-antibiotic-usage,days-since-experiment-start (where day 0 start means infection day),Infected or uninfected,Constant light or typical light cycle
+T282 G1 36h,G1,Whole colon,2024,9,3,subject-10,Yes,1.5,Uninfected,Typical light
+T282 G2 36h,G2,Whole colon,2024,9,3,subject-11,Yes,1.5,Uninfected,Typical light
+T282 G3 36h,G3,Whole colon,2024,9,3,subject-12,Yes,1.5,Uninfected,Typical light
+T282 G4 36h,G4,Whole colon,2024,9,3,subject-13,Yes,1.5,Uninfected,Typical light
+T282 G5 36h,G5,Whole colon,2024,9,3,subject-14,Yes,1.5,Uninfected,Typical light
+T282 B1 36h,B1,Whole colon,2024,9,3,subject-1,Yes,1.5,Uninfected,Constant light
+T282 B2 36h,B2,Whole colon,2024,9,3,subject-2,Yes,1.5,Uninfected,Constant light
+T282 B3 36h,B3,Whole colon,2024,9,3,subject-3,Yes,1.5,Uninfected,Constant light
+T282 B4 36h,B4,Whole colon,2024,9,3,subject-4,Yes,1.5,Uninfected,Constant light
+T282 B5 36h,B5,Whole colon,2024,9,3,subject-5,Yes,1.5,Uninfected,Constant light
+T282 E1 36h,E1,Whole colon,2024,9,3,subject-6,Yes,1.5,Infected,Constant light 
+T282 E3 36h,E3,Whole colon,2024,9,3,subject-7,Yes,1.5,Infected,Constant light 
+T282 E4 36h,E4,Whole colon,2024,9,3,subject-8,Yes,1.5,Infected,Constant light 
+T282 E5 36h,E5,Whole colon,2024,9,3,subject-9,Yes,1.5,Infected,Constant light 
+T282 F1 36h,F1,Whole colon,2024,9,3,subject-15,Yes,1.5,Infected,Typical light
+T282 F2 36h,F2,Whole colon,2024,9,3,subject-16,Yes,1.5,Infected,Typical light
+T282 F3 36h,F3,Whole colon,2024,9,3,subject-17,Yes,1.5,Infected,Typical light
