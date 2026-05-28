@@ -18,9 +18,9 @@ attached base packages:
 [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] GSVA_2.2.1          BiocManager_1.30.26 GSA_1.03.3          Glimma_2.18.0       edgeR_4.6.3         limma_3.64.3       
- [7] Rsubread_2.22.1     lubridate_1.9.4     forcats_1.0.1       stringr_1.5.2       dplyr_1.1.4         purrr_1.1.0        
-[13] readr_2.1.5         tidyr_1.3.1         tibble_3.3.0        ggplot2_4.0.0       tidyverse_2.0.0    
+ [1] GSVA_2.2.1      GSA_1.03.3      Glimma_2.18.0   edgeR_4.6.3     limma_3.64.3    Rsubread_2.22.1 lubridate_1.9.4
+ [8] forcats_1.0.1   stringr_1.5.2   dplyr_1.1.4     purrr_1.1.0     readr_2.1.5     tidyr_1.3.1     tibble_3.3.0   
+[15] ggplot2_4.0.0   tidyverse_2.0.0
 
 loaded via a namespace (and not attached):
  [1] DBI_1.2.3                   GSEABase_1.70.1             rlang_1.1.6                 magrittr_2.0.4             

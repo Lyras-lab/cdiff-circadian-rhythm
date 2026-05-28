@@ -478,6 +478,8 @@ indexed <- ids2indices(gene.sets = metabolite_list, identifiers = rownames(y.pro
 dir.create(file.path(outdir, "gsea", "camera"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, "gsea", "fry"), recursive = TRUE, showWarnings = FALSE)
 
+length(indexed$`Glycosides [BR:br08021]`)
+
 for(contrast in colnames(contrast.matrix)){
   
   camera_result <- camera(y = y.protein ,index = indexed, design = design,

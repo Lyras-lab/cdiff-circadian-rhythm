@@ -9,7 +9,7 @@ While the dataset encompasses this wider timeline, the primary focus of the down
 Note that "typical light" here refers to the standard light-dark conditions of a 12-hour light/12-hour dark cycle in the paper.
 
 ## Environment & Reproducibility
-Analyses were run under **R 4.4.0**, with the exception of the general metabolomics profiling which was run under **R 4.5.1**. Exact R package versions for each specific analysis (transcriptomics, metabolomics, gut bacterial species abundance from 16S rDNA sequencing) can be found in the generated text files within the `sessioninfo/` directory.
+Analyses were run under **R 4.5.1**, whith the excpetion of of the 16s analysis which was run under **R 4.4.0**. Exact R package versions for each specific analysis (transcriptomics, metabolomics, gut bacterial species abundance from 16S rDNA sequencing) can be found in the generated text files within the `sessioninfo/` directory.
 
 ## Analysis Pipelines
 

@@ -15,7 +15,6 @@ library(rstatix)
 # Place to save output results
 dir.create(file.path(".", "sessioninfo"), recursive = TRUE, showWarnings = FALSE)
 outdir <- file.path(".", "output_abundance")
-
 dir.create(file.path(outdir, "toptables"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, "toptreat"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, "glimma", "volcano"), recursive = TRUE, showWarnings = FALSE)
